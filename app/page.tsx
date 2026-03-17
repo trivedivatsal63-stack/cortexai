@@ -99,6 +99,12 @@ export default function Home() {
           <div className="online-indicator">
             <div className="online-dot" />
             <span className="online-label">ONLINE</span>
+            <a href="/about"
+              style={{ marginLeft: '10px', fontSize: '10px', color: '#64748b', fontFamily: 'monospace', textDecoration: 'none', padding: '2px 8px', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: '3px', transition: 'color 0.15s' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#00ff88')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#64748b')}>
+              ABOUT
+            </a>
           </div>
         </div>
 
@@ -220,9 +226,9 @@ export default function Home() {
         .app-card { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; background: #0a0d12; }
 
         @media (min-width: 1024px) {
-          .app-wrap { padding: 20px; align-items: center; }
-          .app-card { max-width: 1100px; height: calc(100vh - 40px); height: calc(100dvh - 40px); border: 0.5px solid rgba(0,255,136,0.15); border-radius: 12px; }
-        }
+  .app-wrap { padding: 0; align-items: stretch; }
+  .app-card { max-width: 100%; height: 100vh; height: 100dvh; border: none; border-radius: 0; border-left: none; border-right: none; }
+    }
 
         .app-hdr { background: #0f1318; border-bottom: 0.5px solid rgba(0,255,136,0.12); padding: 10px 14px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .app-logo { font-weight: 700; color: #00ff88; letter-spacing: 0.06em; font-size: 15px; }
