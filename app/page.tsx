@@ -59,7 +59,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const chatEndRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
 
   const messages = tab === 'tools' ? toolMessages : kbMessages
   const setMessages = tab === 'tools' ? setToolMessages : setKbMessages
@@ -68,12 +68,7 @@ export default function Home() {
   const activeKB = kbMode ? KB_DOMAINS.find(d => d.id === kbMode) : null
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, loading])
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px'
-    }
-  }, [input])
+
 
   async function sendMessage(text?: string) {
     const content = (text ?? input).trim()
@@ -184,7 +179,7 @@ export default function Home() {
               <div ref={chatEndRef} />
             </div>
             <InputBar value={input} onChange={setInput} onSend={() => sendMessage()} loading={loading} error={error}
-              placeholder={activeTool.placeholder} modeLabel={activeTool.label} modeColor={activeTool.color} textareaRef={textareaRef}
+              placeholder={activeTool.placeholder} modeLabel={activeTool.label} modeColor={activeTool.color}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }} />
           </>
         )}
@@ -242,7 +237,7 @@ export default function Home() {
                   <div ref={chatEndRef} />
                 </div>
                 <InputBar value={input} onChange={setInput} onSend={() => sendMessage()} loading={loading} error={error}
-                  placeholder={`Ask anything about ${activeKB?.name}...`} modeLabel={activeKB?.name ?? ''} modeColor="#00ff88" textareaRef={textareaRef}
+                  placeholder={`Ask anything about ${activeKB?.name}...`} modeLabel={activeKB?.name ?? ''} modeColor="#00ff88"
                   onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }} />
               </>
             )}
@@ -291,10 +286,10 @@ function Messages({ messages, loading }: { messages: Message[]; loading: boolean
   )
 }
 
-function InputBar({ value, onChange, onSend, onKeyDown, loading, error, placeholder, modeLabel, modeColor, textareaRef }: {
+function InputBar({ value, onChange, onSend, onKeyDown, loading, error, placeholder, modeLabel, modeColor }: {
   value: string; onChange: (v: string) => void; onSend: () => void; onKeyDown: (e: React.KeyboardEvent) => void
   loading: boolean; error: string; placeholder: string; modeLabel: string; modeColor: string
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>
+
 }) {
   return (
     <div style={{ padding: '10px 14px', background: '#0f1318', borderTop: '0.5px solid rgba(0,255,136,0.1)', flexShrink: 0 }}>
@@ -304,7 +299,7 @@ function InputBar({ value, onChange, onSend, onKeyDown, loading, error, placehol
         <span style={{ marginLeft: '8px', color: '#334155' }}>· Enter to send · Shift+Enter for newline</span>
       </div>
       <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-        <textarea ref={textareaRef} value={value} onChange={e => onChange(e.target.value)} onKeyDown={onKeyDown} placeholder={placeholder} rows={1}
+        <textarea value={value} onChange={e => onChange(e.target.value)} onKeyDown={onKeyDown} placeholder={placeholder} rows={1}
           style={{ flex: 1, background: '#0a0d12', border: '0.5px solid rgba(0,255,136,0.15)', borderRadius: '7px', padding: '9px 12px', color: '#e2e8f0', fontSize: '13px', fontFamily: 'inherit', resize: 'none', minHeight: '38px', maxHeight: '120px', lineHeight: '1.5', outline: 'none' }}
           onFocus={e => (e.target.style.borderColor = 'rgba(0,255,136,0.35)')}
           onBlur={e => (e.target.style.borderColor = 'rgba(0,255,136,0.15)')} />
