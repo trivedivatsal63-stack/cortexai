@@ -59,7 +59,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const chatEndRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   const messages = tab === 'tools' ? toolMessages : kbMessages
   const setMessages = tab === 'tools' ? setToolMessages : setKbMessages
@@ -294,7 +294,7 @@ function Messages({ messages, loading }: { messages: Message[]; loading: boolean
 function InputBar({ value, onChange, onSend, onKeyDown, loading, error, placeholder, modeLabel, modeColor, textareaRef }: {
   value: string; onChange: (v: string) => void; onSend: () => void; onKeyDown: (e: React.KeyboardEvent) => void
   loading: boolean; error: string; placeholder: string; modeLabel: string; modeColor: string
-  textareaRef: React.RefObject<HTMLTextAreaElement>
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
   return (
     <div style={{ padding: '10px 14px', background: '#0f1318', borderTop: '0.5px solid rgba(0,255,136,0.1)', flexShrink: 0 }}>
