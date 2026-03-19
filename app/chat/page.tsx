@@ -252,7 +252,7 @@ export default function CyberAI() {
 
                 <div className="sidebar-bottom">
                     <div className="user-row">
-                        <UserButton afterSignOutUrl="/sign-in" />
+                        <UserButton />
                         <span className="user-label">Account</span>
                     </div>
                     <a href="/about" className="about-link">ABOUT</a>
