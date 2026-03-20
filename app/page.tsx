@@ -181,7 +181,7 @@ export default function LandingPage() {
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,255,178,0.08)', border: '1px solid rgba(0,255,178,0.2)', borderRadius: 100, padding: '6px 16px', marginBottom: 32 }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00FFB2', animation: 'pulse 2s ease-in-out infinite' }} />
                     <span style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 11, color: '#00FFB2', letterSpacing: 2, textTransform: 'uppercase' }}>
-                        AI Learning Platform · Demo March 30
+                        AI Learning Platform
                     </span>
                 </div>
 
