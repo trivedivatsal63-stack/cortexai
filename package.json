@@ -14,10 +14,10 @@
     "@supabase/supabase-js": "^2.99.2",
     "css": "^3.0.0",
     "groq-sdk": "^1.1.1",
+    "mermaid": "^11.13.0",
     "next": "16.1.7",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.1"
   },
   "devDependencies": {

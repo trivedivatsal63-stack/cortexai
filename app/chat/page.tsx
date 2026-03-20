@@ -1,6 +1,5 @@
 'use client'
-import { useState, useRef, useEffect, useCallback } from 'react'
-import Markdown from 'react-markdown'
+import { useState, useRef, useEffect } from 'react'
 import { UserButton } from '@clerk/nextjs'
 
 type Message = { role: 'user' | 'assistant'; content: string }
@@ -15,6 +14,8 @@ type ChatSession = {
     subMode?: ToolMode | KBMode
     createdAt: number
 }
+
+const EMPTY_MESSAGES: Message[] = []
 
 const TOOL_MODES = [
     { id: 'log' as ToolMode, label: 'Log Analysis', color: '#3b82f6' },
@@ -38,7 +39,7 @@ function genId() { return Math.random().toString(36).slice(2) }
 function getTitle(messages: Message[]) {
     const first = messages.find(m => m.role === 'user')
     if (!first) return 'New chat'
-    return first.content.slice(0, 36) + (first.content.length > 36 ? '…' : '')
+    return first.content.slice(0, 36) + (first.content.length > 36 ? '...' : '')
 }
 
 export default function CyberAI() {
@@ -56,25 +57,46 @@ export default function CyberAI() {
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
     const active = sessions.find(s => s.id === activeId) ?? null
-    const messages = active?.messages ?? []
+    const messages = active?.messages ?? EMPTY_MESSAGES
 
-    useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, loading])
+    const grouped = {
+        today: sessions.filter(s => Date.now() - s.createdAt < 86400000),
+        week: sessions.filter(s => Date.now() - s.createdAt >= 86400000 && Date.now() - s.createdAt < 604800000),
+        older: sessions.filter(s => Date.now() - s.createdAt >= 604800000),
+    }
+
+    const modeColor = chatMode === 'tools'
+        ? (TOOL_MODES.find(m => m.id === toolMode)?.color ?? '#00ff88')
+        : '#00ff88'
+
+    const activeTool = TOOL_MODES.find(m => m.id === toolMode)
+    const activeKB = KB_DOMAINS.find(d => d.id === kbMode)
+
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [messages, loading])
 
     useEffect(() => {
         fetch('/api/history')
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) return null
+                return r.json()
+            })
             .then(d => {
-                if (d.messages && d.messages.length > 0) {
-                    const restored: ChatSession = {
-                        id: genId(),
-                        title: getTitle(d.messages),
-                        messages: d.messages,
-                        mode: 'general',
-                        createdAt: Date.now() - 1000,
-                    }
-                    setSessions([restored])
-                    setActiveId(restored.id)
-                }
+                if (!d || !d.sessions || d.sessions.length === 0) return
+
+                const restored: ChatSession[] = d.sessions.map((sessionMsgs: any[]) => ({
+                    id: genId(),
+                    title: getTitle(sessionMsgs),
+                    messages: sessionMsgs,
+                    mode: 'general' as ChatMode,
+                    createdAt: new Date(sessionMsgs[0].created_at).getTime(),
+                }))
+
+                // Most recent first
+                restored.sort((a, b) => b.createdAt - a.createdAt)
+                setSessions(restored)
+                setActiveId(restored[0].id)
             })
             .catch(() => { })
     }, [])
@@ -108,6 +130,16 @@ export default function CyberAI() {
         if (activeId === id) setActiveId(sessions.filter(s => s.id !== id)[0]?.id ?? null)
     }
 
+    function handleKeyDown(e: React.KeyboardEvent) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
+    }
+
+    function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
+        setInput(e.target.value)
+        e.target.style.height = 'auto'
+        e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px'
+    }
+
     async function sendMessage(text?: string) {
         const content = (text ?? input).trim()
         if (!content || loading) return
@@ -135,7 +167,9 @@ export default function CyberAI() {
             ...s, messages: newMessages, title: getTitle(newMessages),
         } : s))
 
-        setInput(''); setError(''); setLoading(true)
+        setInput('')
+        setError('')
+        setLoading(true)
         if (textareaRef.current) { textareaRef.current.style.height = '24px' }
 
         const mode = currentSession.subMode ?? currentSession.mode
@@ -147,53 +181,46 @@ export default function CyberAI() {
                 body: JSON.stringify({ messages: newMessages.slice(-8), mode }),
             })
             const data = await res.json()
+
             if (res.status === 429) { setError('Rate limit reached. Wait 60 seconds.'); return }
             if (!res.ok || data.error) { setError(data.error ?? 'Error'); return }
 
-            const finalMessages = [...newMessages, { role: 'assistant' as const, content: data.reply }]
+            const reply = data.reply
+            if (!reply) { setError('Empty response from AI'); return }
+
+            const finalMessages = [...newMessages, { role: 'assistant' as const, content: reply }]
             setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, messages: finalMessages } : s))
 
-            await fetch('/api/history', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userMessage: content, aiMessage: data.reply }),
-            })
-        } catch { setError('Network error.') }
-        finally { setLoading(false) }
+            try {
+                const saveRes = await fetch('/api/history', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userMessage: content, aiMessage: reply }),
+                })
+                if (!saveRes.ok) {
+                    const saveErr = await saveRes.json()
+                    console.error('[History save failed]', saveErr)
+                }
+            } catch (saveErr) {
+                console.error('[History save error]', saveErr)
+            }
+
+        } catch (err) {
+            console.error('[sendMessage error]', err)
+            setError('Network error.')
+        } finally {
+            setLoading(false)
+        }
     }
-
-    function handleKeyDown(e: React.KeyboardEvent) {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
-    }
-
-    function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-        setInput(e.target.value)
-        e.target.style.height = 'auto'
-        e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px'
-    }
-
-    const grouped = {
-        today: sessions.filter(s => Date.now() - s.createdAt < 86400000),
-        week: sessions.filter(s => Date.now() - s.createdAt >= 86400000 && Date.now() - s.createdAt < 604800000),
-        older: sessions.filter(s => Date.now() - s.createdAt >= 604800000),
-    }
-
-    const modeColor = chatMode === 'tools'
-        ? (TOOL_MODES.find(m => m.id === toolMode)?.color ?? '#00ff88')
-        : '#00ff88'
-
-    const activeTool = TOOL_MODES.find(m => m.id === toolMode)
-    const activeKB = KB_DOMAINS.find(d => d.id === kbMode)
 
     return (
         <div className="layout">
             {mobileOpen && <div className="mobile-overlay" onClick={() => setMobileOpen(false)} />}
 
-            {/* Sidebar */}
             <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'} ${mobileOpen ? 'mobile-show' : ''}`}>
                 <div className="sidebar-top">
                     <div className="brand">
-                        <span className="brand-icon">⚡</span>
+                        <span className="brand-icon">{'\u26A1'}</span>
                         <span className="brand-name">CyberAI</span>
                         <span className="brand-badge">v2.0</span>
                     </div>
@@ -205,7 +232,6 @@ export default function CyberAI() {
 
                 <div className="sidebar-history">
                     {sessions.length === 0 && <div className="no-history">No chats yet</div>}
-
                     {grouped.today.length > 0 && (
                         <div className="history-group">
                             <div className="history-label">Today</div>
@@ -259,16 +285,14 @@ export default function CyberAI() {
                 </div>
             </aside>
 
-            {/* Main */}
             <main className="main">
-                {/* Topbar */}
                 <div className="topbar">
                     <button className="toggle-btn" onClick={() => { setSidebarOpen(p => !p); setMobileOpen(p => !p) }}>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
                     </button>
                     <div className="mode-tabs">
                         {([['general', 'General'], ['tools', 'Tools'], ['kb', 'Knowledge Base']] as [ChatMode, string][]).map(([m, label]) => (
-                            <button key={m} onClick={() => setChatMode(m)} className={`mode-tab ${chatMode === m ? 'mode-tab-active' : ''}`}>
+                            <button key={m} onClick={() => setChatMode(m as ChatMode)} className={`mode-tab ${chatMode === m ? 'mode-tab-active' : ''}`}>
                                 {label}
                             </button>
                         ))}
@@ -278,7 +302,6 @@ export default function CyberAI() {
                     </div>
                 </div>
 
-                {/* Submode bar */}
                 {chatMode === 'tools' && (
                     <div className="submode-bar">
                         {TOOL_MODES.map(m => (
@@ -301,14 +324,13 @@ export default function CyberAI() {
                     </div>
                 )}
 
-                {/* Chat */}
                 <div className="chat-area">
                     {messages.length === 0 && (
                         <div className="welcome">
-                            <div className="welcome-icon">⚡</div>
+                            <div className="welcome-icon">{'\u26A1'}</div>
                             <h1 className="welcome-title">CyberAI</h1>
                             <p className="welcome-sub">
-                                {chatMode === 'general' && "Ask any cybersecurity question — I'll route it to the right expert system automatically."}
+                                {chatMode === 'general' && "Ask any cybersecurity question \u2014 I'll route it to the right expert system automatically."}
                                 {chatMode === 'tools' && `${activeTool?.label} mode active. Ready to help.`}
                                 {chatMode === 'kb' && `${activeKB?.name} knowledge base. ${activeKB?.desc}.`}
                             </p>
@@ -328,8 +350,8 @@ export default function CyberAI() {
                                 {chatMode === 'tools' && toolMode === 'script' && ['Write a port scanner in Python', 'Create a log parser script', 'Write a Bash recon automation script'].map(q => (
                                     <button key={q} className="chip" onClick={() => sendMessage(q)}>{q}</button>
                                 ))}
-                                {chatMode === 'kb' && KB_DOMAINS.find(d => d.id === kbMode) && (
-                                    <p className="kb-hint">{activeKB?.desc} — type your question below</p>
+                                {chatMode === 'kb' && (
+                                    <p className="kb-hint">{activeKB?.desc} {'\u2014'} type your question below</p>
                                 )}
                             </div>
                         </div>
@@ -338,19 +360,27 @@ export default function CyberAI() {
                     {messages.map((msg, i) => (
                         <div key={i} className={`msg-row ${msg.role === 'user' ? 'msg-user' : 'msg-ai'}`}>
                             <div className={`avatar ${msg.role === 'user' ? 'av-user' : 'av-ai'}`}>
-                                {msg.role === 'user' ? 'U' : '⚡'}
+                                {msg.role === 'user' ? 'U' : '\u26A1'}
                             </div>
                             <div className={`bubble ${msg.role === 'user' ? 'bub-user' : 'bub-ai'}`}>
-                                {msg.role === 'assistant'
-                                    ? <Markdown>{msg.content}</Markdown>
-                                    : <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>}
+                                <pre style={{
+                                    whiteSpace: 'pre-wrap',
+                                    wordBreak: 'break-word',
+                                    fontFamily: 'inherit',
+                                    fontSize: 'inherit',
+                                    margin: 0,
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: 0,
+                                    color: 'inherit'
+                                }}>{msg.content}</pre>
                             </div>
                         </div>
                     ))}
 
                     {loading && (
                         <div className="msg-row msg-ai">
-                            <div className="avatar av-ai">⚡</div>
+                            <div className="avatar av-ai">{'\u26A1'}</div>
                             <div className="typing">
                                 {[0, 1, 2].map(i => <span key={i} className="dot" style={{ animationDelay: `${i * 0.15}s` }} />)}
                             </div>
@@ -359,11 +389,16 @@ export default function CyberAI() {
                     <div ref={chatEndRef} />
                 </div>
 
-                {/* Input */}
                 <div className="input-area">
-                    {error && <div className="error-msg">⚠ {error}</div>}
+                    {error && <div className="error-msg">{'\u26A0'} {error}</div>}
                     <div className="input-box">
-                        <textarea ref={textareaRef} className="input-ta" value={input} onChange={handleInput} onKeyDown={handleKeyDown} rows={1}
+                        <textarea
+                            ref={textareaRef}
+                            className="input-ta"
+                            value={input}
+                            onChange={handleInput}
+                            onKeyDown={handleKeyDown}
+                            rows={1}
                             placeholder={
                                 chatMode === 'general' ? 'Ask anything cybersecurity...'
                                     : chatMode === 'tools' ? `Ask about ${activeTool?.label}...`
@@ -381,7 +416,7 @@ export default function CyberAI() {
                         <span className="mode-pill" style={{ background: `${modeColor}15`, color: modeColor, borderColor: `${modeColor}25` }}>
                             {chatMode === 'general' ? 'AUTO-ROUTE' : chatMode === 'tools' ? activeTool?.label.toUpperCase() : activeKB?.name.toUpperCase()}
                         </span>
-                        <span className="hint-text">Enter to send · Shift+Enter for newline</span>
+                        <span className="hint-text">Enter to send {'\u00B7'} Shift+Enter for newline</span>
                     </div>
                 </div>
             </main>
@@ -390,11 +425,8 @@ export default function CyberAI() {
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; width: 100%; overflow: hidden; font-family: 'JetBrains Mono', monospace; }
-
         @keyframes blink { 0%,80%,100%{opacity:0.15;transform:scale(0.7)} 40%{opacity:1;transform:scale(1)} }
         @keyframes fadein { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: rgba(0,255,136,0.12); border-radius: 2px; }
         pre { background: #0d1117 !important; border-radius: 8px; padding: 14px; overflow-x: auto; margin: 8px 0; border: 0.5px solid rgba(0,255,136,0.1); }
@@ -407,9 +439,7 @@ export default function CyberAI() {
         table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 12px; }
         th,td { border: 0.5px solid rgba(0,255,136,0.12); padding: 7px 12px; }
         th { color: #00ff88; background: rgba(0,255,136,0.04); }
-
         .layout { display: flex; width: 100vw; height: 100vh; height: 100dvh; background: #080b10; overflow: hidden; }
-
         .sidebar { width: 256px; min-width: 256px; height: 100%; background: #0b0f18; border-right: 0.5px solid rgba(0,255,136,0.07); display: flex; flex-direction: column; transition: width 0.22s ease, min-width 0.22s ease; overflow: hidden; flex-shrink: 0; }
         .sidebar-closed { width: 0 !important; min-width: 0 !important; }
         .sidebar-top { padding: 16px 12px 12px; flex-shrink: 0; border-bottom: 0.5px solid rgba(0,255,136,0.06); }
@@ -419,7 +449,6 @@ export default function CyberAI() {
         .brand-badge { font-size: 9px; background: rgba(0,255,136,0.07); border: 0.5px solid rgba(0,255,136,0.18); color: rgba(0,255,136,0.7); padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
         .new-chat-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 14px; background: rgba(0,255,136,0.06); border: 0.5px solid rgba(0,255,136,0.18); border-radius: 8px; color: #00ff88; font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.05em; }
         .new-chat-btn:hover { background: rgba(0,255,136,0.11); border-color: rgba(0,255,136,0.32); }
-
         .sidebar-history { flex: 1; overflow-y: auto; padding: 8px 8px 0; }
         .no-history { font-size: 11px; color: #1e293b; text-align: center; padding: 24px 0; letter-spacing: 0.04em; }
         .history-group { margin-bottom: 18px; }
@@ -434,15 +463,12 @@ export default function CyberAI() {
         .history-del { opacity: 0; background: none; border: none; color: #334155; cursor: pointer; padding: 3px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.12s; flex-shrink: 0; }
         .history-item:hover .history-del { opacity: 1; }
         .history-del:hover { color: #f87171; background: rgba(248,113,113,0.1); }
-
         .sidebar-bottom { padding: 12px; border-top: 0.5px solid rgba(0,255,136,0.06); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; }
         .user-row { display: flex; align-items: center; gap: 9px; }
         .user-label { font-size: 11px; color: #334155; white-space: nowrap; }
         .about-link { font-size: 9px; color: #1e293b; text-decoration: none; letter-spacing: 0.08em; transition: color 0.15s; }
         .about-link:hover { color: #00ff88; }
-
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; background: #080b10; }
-
         .topbar { display: flex; align-items: center; gap: 10px; padding: 10px 20px; background: #0b0f18; border-bottom: 0.5px solid rgba(0,255,136,0.07); flex-shrink: 0; }
         .toggle-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: none; border: 0.5px solid rgba(255,255,255,0.06); border-radius: 7px; color: #334155; cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
         .toggle-btn:hover { color: #00ff88; border-color: rgba(0,255,136,0.2); }
@@ -451,13 +477,10 @@ export default function CyberAI() {
         .mode-tab:hover { color: #64748b; }
         .mode-tab-active { background: rgba(0,255,136,0.09) !important; color: #00ff88 !important; }
         .badge-groq { font-size: 9px; background: rgba(255,107,0,0.08); border: 0.5px solid rgba(255,107,0,0.25); color: rgba(255,107,0,0.8); padding: 2px 8px; border-radius: 3px; letter-spacing: 0.05em; }
-
         .submode-bar { display: flex; gap: 5px; padding: 8px 20px; background: #0a0d15; border-bottom: 0.5px solid rgba(0,255,136,0.05); flex-shrink: 0; overflow-x: auto; }
         .submode-btn { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 6px; border: 0.5px solid; font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
         .submode-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-
         .chat-area { flex: 1; overflow-y: auto; padding: 20px 0 10px; display: flex; flex-direction: column; }
-
         .welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 48px 32px; text-align: center; animation: fadein 0.35s ease; }
         .welcome-icon { font-size: 44px; margin-bottom: 16px; }
         .welcome-title { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; color: #00ff88; letter-spacing: -0.02em; margin-bottom: 10px; }
@@ -466,7 +489,6 @@ export default function CyberAI() {
         .chip { padding: 8px 18px; background: rgba(0,255,136,0.03); border: 0.5px solid rgba(0,255,136,0.12); border-radius: 20px; color: #475569; font-size: 12px; font-family: inherit; cursor: pointer; transition: all 0.15s; line-height: 1.4; text-align: left; }
         .chip:hover { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.28); color: #00ff88; }
         .kb-hint { font-size: 12px; color: #1e293b; }
-
         .msg-row { display: flex; gap: 14px; padding: 12px 28px; animation: fadein 0.2s ease; transition: background 0.1s; }
         .msg-row:hover { background: rgba(255,255,255,0.008); }
         .msg-user { flex-direction: row-reverse; }
@@ -476,10 +498,8 @@ export default function CyberAI() {
         .bubble { max-width: min(700px, 78%); font-size: 13px; line-height: 1.75; color: #94a3b8; padding: 11px 16px; border-radius: 12px; }
         .bub-user { background: rgba(30,41,59,0.8); border: 0.5px solid rgba(59,130,246,0.12); color: #cbd5e1; border-radius: 12px 2px 12px 12px; }
         .bub-ai { background: rgba(15,20,30,0.9); border: 0.5px solid rgba(0,255,136,0.07); border-radius: 2px 12px 12px 12px; }
-
         .typing { display: flex; align-items: center; gap: 5px; padding: 14px 16px; background: rgba(15,20,30,0.9); border: 0.5px solid rgba(0,255,136,0.07); border-radius: 2px 12px 12px 12px; }
         .dot { width: 5px; height: 5px; border-radius: 50%; background: #00ff88; display: inline-block; animation: blink 1.2s ease-in-out infinite; }
-
         .input-area { padding: 12px 28px 18px; background: #0b0f18; border-top: 0.5px solid rgba(0,255,136,0.07); flex-shrink: 0; }
         .error-msg { font-size: 11px; color: #f87171; background: rgba(248,113,113,0.06); border: 0.5px solid rgba(248,113,113,0.18); border-radius: 7px; padding: 7px 12px; margin-bottom: 10px; }
         .input-box { display: flex; gap: 10px; align-items: flex-end; background: #080b10; border: 0.5px solid rgba(0,255,136,0.12); border-radius: 12px; padding: 10px 12px; transition: border-color 0.15s; }
@@ -493,7 +513,6 @@ export default function CyberAI() {
         .input-meta { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
         .mode-pill { font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 3px; border: 0.5px solid; letter-spacing: 0.07em; white-space: nowrap; }
         .hint-text { font-size: 10px; color: #1e293b; }
-
         .mobile-overlay { display: none; }
         @media (max-width: 768px) {
           .sidebar { position: fixed; left: 0; top: 0; z-index: 100; transform: translateX(-100%); transition: transform 0.22s ease; width: 256px !important; min-width: 256px !important; }

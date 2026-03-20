@@ -1,9 +1,17 @@
-import { createClient } from "@supabase/supabase-js";
+// lib/supabase/server.ts
+// This is your SERVER-SIDE client — use only in API routes
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+export function createSupabaseServerClient(clerkUserId: string) {
+    const client = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!, // Service role bypasses RLS
+        {
+            auth: { persistSession: false }
+        }
+    );
 
-export const supabase =
-    supabaseUrl && supabaseKey
-        ? createClient(supabaseUrl, supabaseKey)
-        : null;
+    // Set the user context for RLS policies
+    // We'll use service role + manual userId check in queries instead
+    return { client, userId: clerkUserId };
+}

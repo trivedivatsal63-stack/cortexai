@@ -1,105 +1,81 @@
 import { auth } from '@clerk/nextjs/server'
-import { NextRequest, NextResponse } from 'next/server'
-import Groq from 'groq-sdk'
+import { NextResponse } from 'next/server'
+import { routeToModel, detectDiagramNeeded } from '@/lib/model-router'
+import { buildSystemPrompt } from '@/lib/prompts/system-prompt'
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
-
-const SYSTEM_PROMPTS: Record<string, string> = {
-    //general
-    general: `You are CyberAI, an expert cybersecurity AI assistant. 
-Automatically determine the most relevant cybersecurity domain based on the user's question
-and provide expert, detailed answers. Cover any topic including networking, web security,
-malware, forensics, cryptography, reverse engineering, tools, and scripting.
-Use markdown with code blocks where appropriate.`,
-    // Tool modes
-    log: `You are CyberAI, an expert cybersecurity analyst specializing in log analysis. 
-Analyze logs, identify anomalies, suspicious patterns, IOCs, and potential attacks. 
-Format findings clearly with severity levels. Use markdown with code blocks for log snippets.`,
-
-    kali: `You are CyberAI, an expert in Kali Linux and offensive security tools.
-Explain tools, their flags, use cases, and real-world examples. 
-Cover tools like nmap, metasploit, burpsuite, hydra, aircrack-ng, sqlmap, john, hashcat, etc.
-Always include practical command examples in code blocks.`,
-
-    bug: `You are CyberAI, an expert bug bounty hunter and penetration tester.
-Help with recon, vulnerability discovery, exploitation techniques, and writing reports.
-Cover OWASP Top 10, CVEs, responsible disclosure, and bounty platforms like HackerOne and Bugcrowd.
-Use markdown with clear steps and code examples.`,
-
-    script: `You are CyberAI, an expert in security scripting and automation.
-Help write Python, Bash, and PowerShell scripts for security tasks.
-Include full working code with comments. Focus on automation, parsing, scanning, and exploitation scripts.
-Always use code blocks with proper syntax highlighting.`,
-
-    // Knowledge base modes
-    os: `You are CyberAI, an expert in operating systems and low-level security.
-Cover kernel internals, memory management, process isolation, privilege rings, syscalls, 
-rootkits, and OS-level attacks and defenses. Be thorough and technical.`,
-
-    net: `You are CyberAI, an expert in networking and network security.
-Cover OSI model, TCP/IP stack, protocols (DNS, HTTP, TLS, ARP, ICMP), 
-packet analysis, network attacks (MITM, spoofing, DDoS), and defenses.
-Use diagrams in text when helpful.`,
-
-    malware: `You are CyberAI, an expert malware analyst.
-Cover malware types, infection vectors, persistence mechanisms, evasion techniques,
-static and dynamic analysis methods, sandbox analysis, and IOCs.
-Be detailed and technical with real-world examples.`,
-
-    crypto: `You are CyberAI, an expert in cryptography and its security implications.
-Cover symmetric/asymmetric encryption, hashing, PKI, TLS, digital signatures,
-and crypto attacks (padding oracle, timing attacks, weak RNG, etc).
-Explain math concepts clearly with practical security context.`,
-
-    web: `You are CyberAI, an expert in web application security.
-Cover OWASP Top 10, SQLi, XSS, CSRF, SSRF, XXE, IDOR, authentication flaws,
-JWT attacks, and modern web vulnerabilities.
-Include payload examples and code in appropriate blocks.`,
-
-    forensics: `You are CyberAI, an expert in digital forensics and incident response.
-Cover the IR lifecycle (PICERL), memory forensics with Volatility, disk forensics,
-Windows/Linux artifacts, log analysis, chain of custody, and forensic tools.
-Be methodical and step-by-step in your explanations.`,
-
-    re: `You are CyberAI, an expert in reverse engineering and binary analysis.
-Cover x86/x64 assembly, Ghidra, IDA Pro, x64dbg, dynamic analysis,
-anti-debugging techniques, shellcode analysis, and binary exploitation basics.
-Include assembly snippets and practical walkthrough steps.`,
-
-    ctf: `You are CyberAI, an expert CTF player and security educator.
-Help with binary exploitation, pwn challenges, ROP chains, heap exploitation,
-web CTF challenges, crypto challenges, and forensics puzzles.
-Explain techniques step by step with working examples.`,
-}
-
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
     const { userId } = await auth()
-    if (!userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { messages, mode, answerType, examMode } = await req.json()
+
+    if (!messages || messages.length === 0) {
+        return NextResponse.json({ error: 'Query is required' }, { status: 400 })
     }
 
-    // 2. Parse request body
-    const { messages, mode } = await req.json()
+    // Get the latest user message for routing decisions
+    const lastUserMessage = messages.filter((m: any) => m.role === 'user').at(-1)?.content ?? ''
 
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-        return NextResponse.json({ error: 'Messages are required' }, { status: 400 })
-    }
+    const needsDiagram = detectDiagramNeeded(lastUserMessage)
 
-    // 3. Get system prompt for the current mode
-    const systemPrompt = SYSTEM_PROMPTS[mode] ?? SYSTEM_PROMPTS.log
+    // Map your existing chat modes to the router's mode format
+    const routerMode = mode === 'kb' || mode === 'general' ? 'learning' : 'cybersecurity'
 
-    // 4. Call Groq
-    const completion = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-            { role: 'system', content: systemPrompt },
-            ...messages,
-        ],
-        max_tokens: 2048,
-        temperature: 0.7,
+    const decision = routeToModel({
+        query: lastUserMessage,
+        mode: routerMode,
+        answerType: answerType ?? 'detailed',
+        examMode: examMode ?? false,
     })
 
-    const reply = completion.choices[0]?.message?.content ?? ''
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`[Router] ${decision.model} — ${decision.reasoning}`)
+    }
+
+    const systemPrompt = buildSystemPrompt({
+        mode: routerMode,
+        answerType: answerType ?? 'detailed',
+        examMode: examMode ?? false,
+        needsDiagram,
+    })
+
+    const groqMessages = [
+        { role: 'system', content: systemPrompt },
+        ...messages.slice(-8), // last 8 messages for context
+    ]
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            model: decision.model,
+            max_tokens: decision.maxTokens,
+            messages: groqMessages,
+        }),
+    })
+
+    if (!response.ok) {
+        const err = await response.text()
+        console.error('[Groq Error]', err)
+        return NextResponse.json({ error: 'AI service error' }, { status: 500 })
+    }
+
+    const text = await response.text()
+    let reply = ''
+    try {
+        const data = JSON.parse(text)
+        if (data.error) {
+            console.error('[Groq API error]', data.error)
+            return NextResponse.json({ error: data.error.message ?? 'AI error' }, { status: 500 })
+        }
+        reply = data.choices?.[0]?.message?.content ?? ''
+    } catch {
+        console.error('[Groq non-JSON response]', text)
+        return NextResponse.json({ error: 'AI service unavailable' }, { status: 503 })
+    }
 
     return NextResponse.json({ reply })
 }
