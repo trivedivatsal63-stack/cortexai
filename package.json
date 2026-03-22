@@ -12,12 +12,15 @@
     "@anthropic-ai/sdk": "^0.79.0",
     "@clerk/nextjs": "^7.0.5",
     "@supabase/supabase-js": "^2.99.2",
+    "autoprefixer": "^10.4.27",
     "css": "^3.0.0",
     "groq-sdk": "^1.1.1",
     "mermaid": "^11.13.0",
     "next": "16.1.7",
+    "postcss": "^8.5.8",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.1"
   },
   "devDependencies": {
@@ -29,7 +32,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.7",
-    "tailwindcss": "^4",
+    "tailwindcss": "^3.4.19",
     "typescript": "^5"
   }
 }

@@ -1,406 +1,316 @@
 'use client'
-
-import { useState, useEffect, useRef } from 'react'
-import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-
-const NAV_LINKS = ['Features', 'How It Works', 'Modes', 'FAQ']
-
-const FEATURES = [
-    {
-        icon: '⬡',
-        title: 'Structured Academic Answers',
-        desc: 'Every response follows Definition → Explanation → Key Points → Example → Summary. No more messy, incomplete outputs.',
-        accent: '#00FFB2',
-    },
-    {
-        icon: '◈',
-        title: 'Smart Learning Modes',
-        desc: 'Switch between General Learning Mode for any subject and Cybersecurity Mode for specialized, deep-dive security content.',
-        accent: '#0099FF',
-    },
-    {
-        icon: '◉',
-        title: 'Context-Aware AI Engine',
-        desc: 'Our routing system selects the right model per query — fast for simple questions, powerful for complex ones.',
-        accent: '#FF6B6B',
-    },
-    {
-        icon: '◬',
-        title: 'Exam-Ready Outputs',
-        desc: 'Toggle Exam Mode for concise, exam-style answers. CyberAI structures learning so you retain and recall better.',
-        accent: '#FFD700',
-    },
-    {
-        icon: '⬡',
-        title: 'Diagram Generation',
-        desc: 'Ask about OS, Networks, DBMS, or Cybersecurity — CyberAI auto-generates visual diagrams when needed.',
-        accent: '#B06EFF',
-    },
-    {
-        icon: '◈',
-        title: 'Multi-Domain Coverage',
-        desc: 'BCA, BSc IT, Data Science, Cybersecurity. One platform, every subject. Your AI study partner for all semesters.',
-        accent: '#00FFB2',
-    },
-]
-
-const PROBLEMS = [
-    'Scattered notes across 5 apps',
-    'ChatGPT gives unstructured walls of text',
-    'No exam-focused formatting',
-    'Switching tools for diagrams',
-]
-
-const SOLUTIONS = [
-    'One structured platform for all subjects',
-    'Definition → Explanation → Example → Summary',
-    'Exam Mode built right in',
-    'Auto-generated diagrams in chat',
-]
-
-const DOMAINS = ['BCA', 'BSc IT', 'Data Science', 'Cybersecurity', 'Networks', 'DBMS', 'OS', 'Web Dev']
-
-function TypeWriter({ text, speed = 35 }: { text: string; speed?: number }) {
-    const [displayed, setDisplayed] = useState('')
-    const [idx, setIdx] = useState(0)
-    useEffect(() => {
-        if (idx < text.length) {
-            const t = setTimeout(() => {
-                setDisplayed(p => p + text[idx])
-                setIdx(i => i + 1)
-            }, speed)
-            return () => clearTimeout(t)
-        }
-    }, [idx, text, speed])
-    return (
-        <span>
-            {displayed}
-            <span style={{ animation: 'blink 1s step-end infinite', opacity: idx < text.length ? 1 : 0 }}>|</span>
-        </span>
-    )
-}
+import { SignInButton, SignUpButton, useUser } from '@clerk/nextjs'
 
 export default function LandingPage() {
-    const { isSignedIn, user } = useUser()
+    const { isSignedIn } = useUser()
     const router = useRouter()
+    const [showAuth, setShowAuth] = useState(false)
     const [scrolled, setScrolled] = useState(false)
-    const [activeMode, setActiveMode] = useState<'learning' | 'cyber'>('learning')
 
     useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 40)
+        if (isSignedIn) router.push('/chat')
+    }, [isSignedIn, router])
+
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 20)
         window.addEventListener('scroll', onScroll)
         return () => window.removeEventListener('scroll', onScroll)
     }, [])
 
     return (
-        <div style={{ background: '#060810', color: '#E8EAF0', minHeight: '100vh', fontFamily: 'var(--font-dm-sans), sans-serif', overflowX: 'hidden' }}>
-            <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes orbFloat1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(30px,-30px)} }
-        @keyframes orbFloat2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-40px,20px)} }
-        @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-        @keyframes pulse { 0%,100%{opacity:0.4;transform:scale(1)} 50%{opacity:1;transform:scale(1.05)} }
-        @keyframes glowPulse { 0%,100%{box-shadow:0 0 20px rgba(0,255,178,0.2)} 50%{box-shadow:0 0 40px rgba(0,255,178,0.5)} }
-        @keyframes scanline { 0%{transform:translateY(-100%)} 100%{transform:translateY(100vh)} }
-        .nav-link { color:rgba(232,234,240,0.5); font-size:14px; text-decoration:none; transition:color 0.2s; cursor:pointer; }
-        .nav-link:hover { color:#00FFB2; }
-        .btn-primary { background:linear-gradient(135deg,#00FFB2,#0099FF); color:#060810; font-weight:700; border:none; border-radius:6px; padding:12px 28px; cursor:pointer; font-size:15px; font-family:var(--font-space-mono),monospace; transition:all 0.2s; }
-        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,255,178,0.3); }
-        .btn-ghost { background:transparent; color:rgba(232,234,240,0.7); border:1px solid rgba(232,234,240,0.15); border-radius:6px; padding:11px 24px; cursor:pointer; font-size:14px; transition:all 0.2s; }
-        .btn-ghost:hover { border-color:#00FFB2; color:#00FFB2; }
-        .feature-card { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:32px; transition:all 0.3s; }
-        .feature-card:hover { background:rgba(255,255,255,0.04); border-color:rgba(0,255,178,0.2); transform:translateY(-4px); }
-        ::-webkit-scrollbar { width:4px; }
-        ::-webkit-scrollbar-thumb { background:rgba(0,255,178,0.3); border-radius:2px; }
-      `}</style>
-
-            {/* Background grid */}
-            <div style={{ position: 'fixed', inset: 0, zIndex: 0, backgroundImage: 'linear-gradient(rgba(0,255,178,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,178,0.03) 1px,transparent 1px)', backgroundSize: '60px 60px', pointerEvents: 'none' }} />
-
-            {/* Orbs */}
-            <div style={{ position: 'fixed', top: '10%', left: '5%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle,rgba(0,255,178,0.08) 0%,transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none', zIndex: 0, animation: 'orbFloat1 8s ease-in-out infinite' }} />
-            <div style={{ position: 'fixed', top: '50%', right: '5%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle,rgba(0,153,255,0.07) 0%,transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0, animation: 'orbFloat2 11s ease-in-out infinite' }} />
-
-            {/* Scanline */}
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(transparent,rgba(0,255,178,0.1),transparent)', animation: 'scanline 8s linear infinite', pointerEvents: 'none', zIndex: 1 }} />
+        <div className="root">
+            {/* Ambient background */}
+            <div className="bg-blob bg-blob-1" />
+            <div className="bg-blob bg-blob-2" />
+            <div className="bg-blob bg-blob-3" />
 
             {/* ── NAV ── */}
-            <nav style={{
-                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-                padding: '0 48px', height: 64,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                background: scrolled ? 'rgba(6,8,16,0.92)' : 'transparent',
-                backdropFilter: scrolled ? 'blur(20px)' : 'none',
-                borderBottom: scrolled ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                transition: 'all 0.3s',
-            }}>
-                {/* Logo */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 32, height: 32, border: '2px solid #00FFB2', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'glowPulse 3s ease-in-out infinite' }}>
-                        <span style={{ color: '#00FFB2', fontSize: 14, fontFamily: 'var(--font-space-mono),monospace', fontWeight: 700 }}>C</span>
+            <nav className={`nav ${scrolled ? 'nav-scrolled' : ''}`}>
+                <div className="nav-inner">
+                    <div className="nav-logo">
+                        <div className="nav-logo-icon">⚡</div>
+                        <span className="nav-logo-text">CyberAI</span>
                     </div>
-                    <span style={{ fontFamily: 'var(--font-syne),sans-serif', fontWeight: 800, fontSize: 20, letterSpacing: -0.5 }}>
-                        Cyber<span style={{ color: '#00FFB2' }}>AI</span>
-                    </span>
-                </div>
-
-                {/* Links */}
-                <div style={{ display: 'flex', gap: 36 }}>
-                    {NAV_LINKS.map(l => <span key={l} className="nav-link">{l}</span>)}
-                </div>
-
-                {/* Auth */}
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    {isSignedIn ? (
-                        <>
-                            <span style={{ fontSize: 13, color: 'rgba(232,234,240,0.5)', fontFamily: 'var(--font-space-mono)' }}>
-                                {user?.firstName}
-                            </span>
-                            <button className="btn-primary" onClick={() => router.push('/chat')}>
-                                Open App →
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <SignInButton mode="modal">
-                                <button className="btn-ghost">Sign In</button>
-                            </SignInButton>
-                            <SignUpButton mode="modal" forceRedirectUrl="/chat">
-                                <button className="btn-primary">Get Started →</button>
-                            </SignUpButton>
-                        </>
-                    )}
+                    <div className="nav-links">
+                        <SignInButton mode="modal">
+                            <button className="nav-link">Sign In</button>
+                        </SignInButton>
+                        <a href="/about" className="nav-link">About</a>
+                        <a href="/blog" className="nav-link">Blog & Suggest</a>
+                        <SignUpButton mode="modal">
+                            <button className="nav-cta">Get Started</button>
+                        </SignUpButton>
+                    </div>
                 </div>
             </nav>
 
             {/* ── HERO ── */}
-            <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '120px 24px 60px', position: 'relative', zIndex: 1 }}>
-                {/* Badge */}
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,255,178,0.08)', border: '1px solid rgba(0,255,178,0.2)', borderRadius: 100, padding: '6px 16px', marginBottom: 32 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00FFB2', animation: 'pulse 2s ease-in-out infinite' }} />
-                    <span style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 11, color: '#00FFB2', letterSpacing: 2, textTransform: 'uppercase' }}>
-                        AI Learning Platform
-                    </span>
+            <section className="hero">
+                <div className="hero-badge">
+                    <span className="hero-badge-dot" />
+                    Now in Beta · Free for Students
                 </div>
 
-                {/* Headline */}
-                <h1 style={{ fontFamily: 'var(--font-syne),sans-serif', fontWeight: 800, fontSize: 'clamp(42px,7vw,88px)', lineHeight: 1.05, letterSpacing: -2, maxWidth: 900, marginBottom: 24 }}>
-                    AI Learning +<br />
-                    <span style={{ background: 'linear-gradient(135deg,#00FFB2 0%,#0099FF 50%,#B06EFF 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                        Cybersecurity
-                    </span><br />
-                    Assistant
+                <h1 className="hero-title">
+                    The AI built for<br />
+                    <span className="hero-gradient">Cybersecurity Students</span>
                 </h1>
 
-                <div style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 15, color: 'rgba(0,255,178,0.7)', marginBottom: 16, minHeight: 24 }}>
-                    <TypeWriter text="$ solving scattered learning, one structured answer at a time" />
-                </div>
-
-                <p style={{ fontSize: 17, color: 'rgba(232,234,240,0.5)', maxWidth: 560, lineHeight: 1.7, marginBottom: 48, fontWeight: 300 }}>
-                    Structured exam-ready answers across BCA, BSc IT, Data Science, and Cybersecurity.
-                    Built for students who need clarity, not noise.
+                <p className="hero-sub">
+                    Stop struggling with dense textbooks and scattered YouTube videos.<br />
+                    CyberAI explains complex topics clearly, helps you prepare for exams,<br />
+                    and builds your skills — all in one place.
                 </p>
 
-                {/* CTA */}
-                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    {isSignedIn ? (
-                        <button className="btn-primary" onClick={() => router.push('/chat')} style={{ fontSize: 16, padding: '14px 36px' }}>
-                            Open CyberAI →
-                        </button>
-                    ) : (
-                        <SignUpButton mode="modal" forceRedirectUrl="/chat">
-                            <button className="btn-primary" style={{ fontSize: 16, padding: '14px 36px' }}>
-                                Try Now — It's Free
-                            </button>
-                        </SignUpButton>
-                    )}
-                    <button className="btn-ghost" style={{ padding: '14px 28px' }}>Watch Demo ▷</button>
+                <div className="hero-actions">
+                    <button className="btn-primary" onClick={() => setShowAuth(true)}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
+                        Try CyberAI — It's Free
+                    </button>
+                    <button className="btn-secondary" onClick={() => alert('Download app coming soon! 🚀')}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                        Download App
+                        <span className="btn-chip">Soon</span>
+                    </button>
                 </div>
 
-                {/* Stats */}
-                <div style={{ display: 'flex', gap: 48, marginTop: 72, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    {[['10+', 'Subjects Covered'], ['4', 'Learning Modes'], ['100%', 'Structured Output']].map(([val, label]) => (
-                        <div key={label} style={{ textAlign: 'center' }}>
-                            <div style={{ fontFamily: 'var(--font-syne),sans-serif', fontWeight: 800, fontSize: 32, color: '#00FFB2' }}>{val}</div>
-                            <div style={{ fontSize: 13, color: 'rgba(232,234,240,0.4)', marginTop: 4 }}>{label}</div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Scroll cue */}
-                <div style={{ position: 'absolute', bottom: 40, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 10, color: 'rgba(232,234,240,0.25)', letterSpacing: 3, textTransform: 'uppercase' }}>scroll</span>
-                    <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom,rgba(0,255,178,0.4),transparent)' }} />
+                <div className="hero-social">
+                    <div className="social-stat"><span className="social-num">2,000+</span><span className="social-label">Students</span></div>
+                    <div className="social-div" />
+                    <div className="social-stat"><span className="social-num">50K+</span><span className="social-label">Questions Answered</span></div>
+                    <div className="social-div" />
+                    <div className="social-stat"><span className="social-num">8</span><span className="social-label">CS Domains</span></div>
                 </div>
             </section>
 
-            {/* ── TICKER ── */}
-            <div style={{ overflow: 'hidden', padding: '12px 0', borderTop: '1px solid rgba(0,255,178,0.1)', borderBottom: '1px solid rgba(0,255,178,0.1)', position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', gap: 48, animation: 'ticker 20s linear infinite', whiteSpace: 'nowrap' }}>
-                    {[...DOMAINS, ...DOMAINS].map((d, i) => (
-                        <span key={i} style={{ fontSize: 13, fontFamily: 'var(--font-space-mono),monospace', color: 'rgba(0,255,178,0.5)', letterSpacing: 3, textTransform: 'uppercase' }}>
-                            {d} <span style={{ color: 'rgba(0,255,178,0.2)' }}>◆</span>
-                        </span>
-                    ))}
-                </div>
-            </div>
+            {/* ── WHY WE BUILT THIS ── */}
+            <section className="section">
+                <div className="section-inner">
+                    <div className="section-label">The Problem</div>
+                    <h2 className="section-title">Cybersecurity education is broken</h2>
+                    <p className="section-sub">We were students too. We know exactly how painful it is.</p>
 
-            {/* ── PROBLEM → SOLUTION ── */}
-            <section style={{ padding: '100px 48px', maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-                <div style={{ textAlign: 'center', marginBottom: 64 }}>
-                    <div style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 11, color: '#00FFB2', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 16 }}>The Problem</div>
-                    <h2 style={{ fontFamily: 'var(--font-syne),sans-serif', fontWeight: 800, fontSize: 'clamp(28px,4vw,48px)', letterSpacing: -1 }}>
-                        Students deserve better than<br />scattered, messy AI answers
-                    </h2>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 32, alignItems: 'center' }}>
-                    <div style={{ background: 'rgba(255,107,107,0.04)', border: '1px solid rgba(255,107,107,0.12)', borderRadius: 16, padding: 36 }}>
-                        <div style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 11, color: '#FF6B6B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 24 }}>Before CyberAI</div>
-                        {PROBLEMS.map((p, i) => (
-                            <div key={i} style={{ display: 'flex', gap: 14, marginBottom: 18 }}>
-                                <span style={{ color: '#FF6B6B', fontWeight: 700, flexShrink: 0 }}>✕</span>
-                                <span style={{ fontSize: 15, color: 'rgba(232,234,240,0.6)', lineHeight: 1.5 }}>{p}</span>
-                            </div>
-                        ))}
-                    </div>
-                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg,#00FFB2,#0099FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>→</div>
-                    <div style={{ background: 'rgba(0,255,178,0.04)', border: '1px solid rgba(0,255,178,0.12)', borderRadius: 16, padding: 36 }}>
-                        <div style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 11, color: '#00FFB2', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 24 }}>With CyberAI</div>
-                        {SOLUTIONS.map((s, i) => (
-                            <div key={i} style={{ display: 'flex', gap: 14, marginBottom: 18 }}>
-                                <span style={{ color: '#00FFB2', fontWeight: 700, flexShrink: 0 }}>✓</span>
-                                <span style={{ fontSize: 15, color: 'rgba(232,234,240,0.8)', lineHeight: 1.5 }}>{s}</span>
+                    <div className="problems-grid">
+                        {[
+                            { icon: '📚', title: 'Textbooks are impossible', desc: 'Dense, outdated, and written for professionals — not students trying to pass an exam or land their first job.' },
+                            { icon: '🔍', title: 'Google gives 50 conflicting answers', desc: 'You search "how does SQL injection work" and get 40 different blog posts, none of which actually explain it clearly.' },
+                            { icon: '⏰', title: 'Exam season panic', desc: 'You have a DCN paper in 12 hours and no structured way to revise. No summaries, no key points, no exam-focused content.' },
+                            { icon: '🧩', title: 'Concepts feel disconnected', desc: 'You learn ARP spoofing but never understand where it fits in the bigger picture of network security.' },
+                        ].map((p, i) => (
+                            <div key={i} className="problem-card" style={{ animationDelay: `${i * 0.08}s` }}>
+                                <div className="problem-icon">{p.icon}</div>
+                                <div className="problem-title">{p.title}</div>
+                                <div className="problem-desc">{p.desc}</div>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* ── FEATURES ── */}
-            <section style={{ padding: '80px 48px', maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-                <div style={{ textAlign: 'center', marginBottom: 64 }}>
-                    <div style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 11, color: '#0099FF', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 16 }}>Features</div>
-                    <h2 style={{ fontFamily: 'var(--font-syne),sans-serif', fontWeight: 800, fontSize: 'clamp(28px,4vw,48px)', letterSpacing: -1 }}>
-                        Everything a student needs.<br />Nothing they don't.
-                    </h2>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 20 }}>
-                    {FEATURES.map((f, i) => (
-                        <div key={i} className="feature-card">
-                            <div style={{ fontSize: 28, color: f.accent, marginBottom: 16 }}>{f.icon}</div>
-                            <h3 style={{ fontFamily: 'var(--font-syne),sans-serif', fontWeight: 700, fontSize: 18, marginBottom: 12 }}>{f.title}</h3>
-                            <p style={{ fontSize: 14, color: 'rgba(232,234,240,0.5)', lineHeight: 1.7 }}>{f.desc}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
+            {/* ── WHAT CYBERAI DOES ── */}
+            <section className="section section-alt">
+                <div className="section-inner">
+                    <div className="section-label">The Solution</div>
+                    <h2 className="section-title">Your personal cybersecurity tutor</h2>
+                    <p className="section-sub">CyberAI doesn't just answer questions — it teaches.</p>
 
-            {/* ── MODES DEMO ── */}
-            <section style={{ padding: '80px 48px', maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-                <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                    <div style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 11, color: '#B06EFF', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 16 }}>Adaptive Modes</div>
-                    <h2 style={{ fontFamily: 'var(--font-syne),sans-serif', fontWeight: 800, fontSize: 'clamp(28px,4vw,48px)', letterSpacing: -1 }}>One AI, two powerful modes</h2>
-                </div>
-
-                {/* Mode tabs */}
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 40 }}>
-                    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 4 }}>
-                        {(['learning', 'cyber'] as const).map(m => (
-                            <button key={m} onClick={() => setActiveMode(m)} style={{
-                                padding: '8px 24px', borderRadius: 6, fontSize: 13, border: '1px solid',
-                                fontFamily: 'var(--font-space-mono),monospace', cursor: 'pointer', transition: 'all 0.25s',
-                                background: activeMode === m ? (m === 'learning' ? 'rgba(0,255,178,0.15)' : 'rgba(255,107,107,0.15)') : 'transparent',
-                                color: activeMode === m ? (m === 'learning' ? '#00FFB2' : '#FF6B6B') : 'rgba(232,234,240,0.4)',
-                                borderColor: activeMode === m ? (m === 'learning' ? 'rgba(0,255,178,0.3)' : 'rgba(255,107,107,0.3)') : 'transparent',
-                            }}>
-                                {m === 'learning' ? '🟢 Learning Mode' : '🔴 Cyber Mode'}
-                            </button>
+                    <div className="features-grid">
+                        {[
+                            { icon: '🎯', color: '#7c6af7', title: 'Exam-Ready Explanations', desc: 'Every answer includes a definition, step-by-step breakdown, key points for quick recall, and an exam summary. Built for revision.' },
+                            { icon: '💻', color: '#4f8ef7', title: 'Programming Help', desc: 'From C++ OOP to Python scripting, get clean code examples with explanations tailored to your level.' },
+                            { icon: '🔐', color: '#10b981', title: '8 Cybersecurity Domains', desc: 'OS security, networking, malware analysis, cryptography, web security, forensics, reverse engineering, and CTF — all covered.' },
+                            { icon: '🧠', color: '#f59e0b', title: 'Smart AI Routing', desc: 'Your query is automatically routed to the right AI model. Simple questions get instant answers. Complex topics get deep dives.' },
+                            { icon: '📖', color: '#ec4899', title: 'Note Generation', desc: 'Ask CyberAI to generate study notes on any topic. Structured, concise, and exam-focused — ready to revise from.' },
+                            { icon: '🛠', color: '#22d3ee', title: 'Security Tools Guide', desc: 'Learn how to use Nmap, Metasploit, Burp Suite, sqlmap and more — with real command examples and use cases.' },
+                        ].map((f, i) => (
+                            <div key={i} className="feature-card" style={{ animationDelay: `${i * 0.07}s` }}>
+                                <div className="feature-icon" style={{ background: `${f.color}18` }}>{f.icon}</div>
+                                <div className="feature-title">{f.title}</div>
+                                <div className="feature-desc">{f.desc}</div>
+                            </div>
                         ))}
-                    </div>
-                </div>
-
-                {/* Mock chat */}
-                <div style={{ maxWidth: 680, margin: '0 auto', background: 'rgba(255,255,255,0.02)', border: `1px solid ${activeMode === 'learning' ? 'rgba(0,255,178,0.15)' : 'rgba(255,107,107,0.15)'}`, borderRadius: 20, overflow: 'hidden', transition: 'border-color 0.3s' }}>
-                    <div style={{ padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                            {['#FF5F57', '#FEBC2E', '#28C840'].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />)}
-                        </div>
-                        <span style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 11, color: 'rgba(232,234,240,0.3)' }}>
-                            cyberai — {activeMode === 'learning' ? 'learning_mode' : 'cyber_mode'}
-                        </span>
-                    </div>
-                    <div style={{ padding: 24 }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
-                            <div style={{ background: activeMode === 'learning' ? 'rgba(0,255,178,0.1)' : 'rgba(255,107,107,0.1)', border: `1px solid ${activeMode === 'learning' ? 'rgba(0,255,178,0.2)' : 'rgba(255,107,107,0.2)'}`, borderRadius: '16px 16px 4px 16px', padding: '10px 16px', maxWidth: '70%', fontSize: 14 }}>
-                                {activeMode === 'learning' ? 'Explain normalization in DBMS' : 'What is a SQL injection attack?'}
-                            </div>
-                        </div>
-                        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '4px 16px 16px 16px', padding: '16px 20px', border: '1px solid rgba(255,255,255,0.06)', fontSize: 13, color: 'rgba(232,234,240,0.75)', lineHeight: 1.8 }}>
-                            <div style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 11, color: activeMode === 'learning' ? '#00FFB2' : '#FF6B6B', marginBottom: 12 }}>
-                                ◉ CyberAI · {activeMode === 'learning' ? 'Learning Mode' : 'Cyber Mode'}
-                            </div>
-                            {activeMode === 'learning' ? (
-                                <>
-                                    <div style={{ marginBottom: 8 }}><span style={{ color: '#00FFB2' }}>📌 Definition</span><br />Normalization organizes a relational DB to reduce redundancy and improve integrity.</div>
-                                    <div style={{ marginBottom: 8 }}><span style={{ color: '#0099FF' }}>⚡ Key Points</span><br />• 1NF: Atomic values &nbsp;• 2NF: No partial deps &nbsp;• 3NF: No transitive deps</div>
-                                    <div><span style={{ color: '#FFD700' }}>🎯 Exam Summary</span><br />Normalization = eliminate redundancy through 1NF→2NF→3NF decomposition.</div>
-                                </>
-                            ) : (
-                                <>
-                                    <div style={{ marginBottom: 8 }}><span style={{ color: '#FF6B6B' }}>🔴 Attack Vector</span><br />SQL Injection inserts malicious SQL via unvalidated input to manipulate queries.</div>
-                                    <div style={{ marginBottom: 8 }}><span style={{ color: '#B06EFF' }}>💀 Example</span><br /><code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4 }}>' OR '1'='1</code> — bypasses login</div>
-                                    <div><span style={{ color: '#00FFB2' }}>🛡 Prevention</span><br />Use parameterized queries + input sanitization + WAF.</div>
-                                </>
-                            )}
-                        </div>
                     </div>
                 </div>
             </section>
 
             {/* ── CTA ── */}
-            <section style={{ padding: '100px 48px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-                <div style={{ maxWidth: 700, margin: '0 auto', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(0,255,178,0.12)', borderRadius: 24, padding: '64px 48px', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center,rgba(0,255,178,0.05) 0%,transparent 70%)', pointerEvents: 'none' }} />
-                    <div style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 11, color: '#00FFB2', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 20 }}>Get Early Access</div>
-                    <h2 style={{ fontFamily: 'var(--font-syne),sans-serif', fontWeight: 800, fontSize: 'clamp(28px,4vw,48px)', letterSpacing: -1, marginBottom: 20 }}>Ready to learn smarter?</h2>
-                    <p style={{ fontSize: 16, color: 'rgba(232,234,240,0.5)', marginBottom: 40, lineHeight: 1.7 }}>
-                        Join students getting structured, exam-ready answers.<br />Free during beta. No credit card required.
-                    </p>
-                    {isSignedIn ? (
-                        <button className="btn-primary" onClick={() => router.push('/chat')} style={{ fontSize: 16, padding: '16px 44px' }}>
-                            Go to Dashboard →
+            <section className="cta-section">
+                <div className="cta-inner">
+                    <div className="orb-wrap">
+                        <div className="orb-blur" />
+                        <div className="orb" />
+                    </div>
+                    <h2 className="cta-title">Ready to learn smarter?</h2>
+                    <p className="cta-sub">Join thousands of CS students who use CyberAI to study better, prepare faster, and understand deeper.</p>
+                    <div className="cta-btns">
+                        <button className="btn-primary" onClick={() => setShowAuth(true)}>
+                            Start Learning Free →
                         </button>
-                    ) : (
-                        <SignUpButton mode="modal" forceRedirectUrl="/chat">
-                            <button className="btn-primary" style={{ fontSize: 16, padding: '16px 44px' }}>
-                                Start Learning Free →
-                            </button>
-                        </SignUpButton>
-                    )}
+                        <a href="/about" className="btn-ghost">Meet the Team</a>
+                    </div>
                 </div>
             </section>
 
             {/* ── FOOTER ── */}
-            <footer style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '40px 48px', position: 'relative', zIndex: 1 }}>
-                <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 28, height: 28, border: '2px solid rgba(0,255,178,0.4)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ color: '#00FFB2', fontSize: 12, fontFamily: 'var(--font-space-mono),monospace', fontWeight: 700 }}>C</span>
-                        </div>
-                        <span style={{ fontFamily: 'var(--font-syne),sans-serif', fontWeight: 800, fontSize: 18 }}>Cyber<span style={{ color: '#00FFB2' }}>AI</span></span>
+            <footer className="footer">
+                <div className="footer-inner">
+                    <div className="footer-logo">
+                        <div className="nav-logo-icon" style={{ width: 24, height: 24, fontSize: 12 }}>⚡</div>
+                        <span style={{ fontWeight: 700, color: '#f0f0f5' }}>CyberAI</span>
                     </div>
-                    <div style={{ display: 'flex', gap: 32 }}>
-                        {['Privacy', 'Terms', 'Contact'].map(l => (
-                            <span key={l} style={{ fontSize: 13, color: 'rgba(232,234,240,0.3)', cursor: 'pointer' }}>{l}</span>
-                        ))}
+                    <div className="footer-links">
+                        <a href="/about">About</a>
+                        <a href="/blog">Blog</a>
+                        <a href="/pricing">Pricing</a>
+                        <a href="/chat">App</a>
                     </div>
-                    <div style={{ fontFamily: 'var(--font-space-mono),monospace', fontSize: 11, color: 'rgba(232,234,240,0.2)' }}>
-                        © 2025 CyberAI · Built for students
-                    </div>
+                    <div className="footer-copy">© 2025 CyberAI. Built for students, by students.</div>
                 </div>
             </footer>
+
+            {/* ── AUTH MODAL ── */}
+            {showAuth && (
+                <>
+                    <div className="modal-backdrop" onClick={() => setShowAuth(false)} />
+                    <div className="auth-modal">
+                        <button className="modal-close" onClick={() => setShowAuth(false)}>✕</button>
+                        <div className="auth-orb">⚡</div>
+                        <h3 className="auth-title">Join CyberAI</h3>
+                        <p className="auth-sub">Free for students. Start learning in seconds.</p>
+                        <SignUpButton mode="modal">
+                            <button className="auth-btn-primary">Create Free Account</button>
+                        </SignUpButton>
+                        <div className="auth-divider"><span>already have an account?</span></div>
+                        <SignInButton mode="modal">
+                            <button className="auth-btn-secondary">Sign In</button>
+                        </SignInButton>
+                    </div>
+                </>
+            )}
+
+            <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Outfit', sans-serif; background: #0c0c0f; color: #f0f0f5; overflow-x: hidden; }
+
+        @keyframes fadein { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes orb-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        @keyframes orb-glow { 0%,100%{box-shadow:0 0 60px rgba(150,120,255,.4)} 50%{box-shadow:0 0 100px rgba(180,140,255,.6)} }
+        @keyframes blob-drift { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(30px,-20px) scale(1.05)} 66%{transform:translate(-20px,15px) scale(0.97)} }
+        @keyframes badge-pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+        @keyframes card-in { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+        /* Background */
+        .root { position: relative; min-height: 100vh; }
+        .bg-blob { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; animation: blob-drift 18s ease-in-out infinite; }
+        .bg-blob-1 { width: 500px; height: 500px; top: -150px; left: -100px; background: rgba(124,106,247,0.12); }
+        .bg-blob-2 { width: 400px; height: 400px; top: 40%; right: -100px; background: rgba(79,142,247,0.1); animation-delay: -6s; }
+        .bg-blob-3 { width: 350px; height: 350px; bottom: 10%; left: 20%; background: rgba(139,92,246,0.08); animation-delay: -12s; }
+
+        /* Nav */
+        .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; transition: all .3s; padding: 0; }
+        .nav-scrolled { background: rgba(12,12,15,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .nav-inner { max-width: 1100px; margin: 0 auto; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-logo-icon { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg,#7c6af7,#4f8ef7); display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 0 16px rgba(124,106,247,0.4); }
+        .nav-logo-text { font-size: 18px; font-weight: 700; color: #f0f0f5; }
+        .nav-links { display: flex; align-items: center; gap: 6px; }
+        .nav-link { background: none; border: none; font-family: inherit; font-size: 14px; color: #8a8a9a; cursor: pointer; padding: 7px 14px; border-radius: 8px; transition: all .15s; text-decoration: none; display: inline-flex; }
+        .nav-link:hover { background: rgba(255,255,255,0.05); color: #f0f0f5; }
+        .nav-cta { background: linear-gradient(135deg,#7c6af7,#4f8ef7); border: none; font-family: inherit; font-size: 13.5px; font-weight: 600; color: #fff; padding: 8px 20px; border-radius: 20px; cursor: pointer; transition: all .2s; box-shadow: 0 0 20px rgba(124,106,247,0.35); }
+        .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 0 28px rgba(124,106,247,0.55); }
+
+        /* Hero */
+        .hero { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 120px 32px 80px; animation: fadein .6s ease both; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 20px; background: rgba(124,106,247,0.1); border: 1px solid rgba(124,106,247,0.25); font-size: 13px; color: #c4b5fd; margin-bottom: 28px; }
+        .hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: #7c6af7; box-shadow: 0 0 8px #7c6af7; animation: badge-pulse 2s ease-in-out infinite; }
+        .hero-title { font-size: clamp(36px, 6vw, 68px); font-weight: 900; letter-spacing: -.04em; line-height: 1.05; color: #f0f0f5; margin-bottom: 22px; }
+        .hero-gradient { background: linear-gradient(135deg, #c4b5fd, #818cf8, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-sub { font-size: clamp(15px,2vw,18px); color: #8a8a9a; line-height: 1.7; margin-bottom: 40px; max-width: 600px; }
+        .hero-actions { display: flex; gap: 12px; margin-bottom: 48px; flex-wrap: wrap; justify-content: center; }
+        .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 12px; border: none; background: linear-gradient(135deg,#7c6af7,#4f8ef7); color: #fff; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .2s; box-shadow: 0 0 28px rgba(124,106,247,.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(124,106,247,.6); }
+        .btn-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: #f0f0f5; font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer; transition: all .2s; position: relative; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
+        .btn-chip { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; background: rgba(124,106,247,0.2); border: 1px solid rgba(124,106,247,0.3); color: #c4b5fd; border-radius: 4px; padding: 2px 6px; }
+        .btn-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 12px 24px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: none; color: #8a8a9a; font-family: inherit; font-size: 14px; text-decoration: none; transition: all .2s; }
+        .btn-ghost:hover { background: rgba(255,255,255,0.05); color: #f0f0f5; }
+        .hero-social { display: flex; align-items: center; gap: 24px; }
+        .social-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .social-num { font-size: 22px; font-weight: 700; color: #f0f0f5; }
+        .social-label { font-size: 12px; color: #44445a; }
+        .social-div { width: 1px; height: 36px; background: rgba(255,255,255,0.08); }
+
+        /* Sections */
+        .section { position: relative; z-index: 1; padding: 96px 32px; }
+        .section-alt { background: rgba(255,255,255,0.015); }
+        .section-inner { max-width: 1100px; margin: 0 auto; }
+        .section-label { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #7c6af7; margin-bottom: 14px; }
+        .section-title { font-size: clamp(28px,4vw,44px); font-weight: 800; letter-spacing: -.03em; color: #f0f0f5; margin-bottom: 14px; }
+        .section-sub { font-size: 16px; color: #8a8a9a; margin-bottom: 56px; max-width: 500px; }
+
+        /* Problems grid */
+        .problems-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+        .problem-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 24px; transition: all .2s; animation: card-in .5s ease both; }
+        .problem-card:hover { background: rgba(255,255,255,0.05); border-color: rgba(124,106,247,0.2); transform: translateY(-2px); }
+        .problem-icon { font-size: 28px; margin-bottom: 12px; }
+        .problem-title { font-size: 16px; font-weight: 600; color: #f0f0f5; margin-bottom: 8px; }
+        .problem-desc { font-size: 14px; color: #8a8a9a; line-height: 1.7; }
+
+        /* Features grid */
+        .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+        .feature-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 24px; transition: all .2s; animation: card-in .5s ease both; }
+        .feature-card:hover { background: rgba(255,255,255,0.05); border-color: rgba(124,106,247,0.25); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.25); }
+        .feature-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 14px; }
+        .feature-title { font-size: 15px; font-weight: 600; color: #f0f0f5; margin-bottom: 8px; }
+        .feature-desc { font-size: 13.5px; color: #8a8a9a; line-height: 1.7; }
+
+        /* CTA */
+        .cta-section { position: relative; z-index: 1; padding: 96px 32px; text-align: center; }
+        .cta-inner { max-width: 600px; margin: 0 auto; }
+        .orb-wrap { position: relative; width: 80px; height: 80px; margin: 0 auto 28px; animation: orb-float 5s ease-in-out infinite; }
+        .orb-blur { position: absolute; inset: -20px; border-radius: 50%; background: radial-gradient(circle,rgba(150,120,255,.22),transparent 70%); filter: blur(14px); }
+        .orb { width: 80px; height: 80px; border-radius: 50%; background: conic-gradient(from 180deg,#c084fc,#818cf8,#60a5fa,#34d399,#fbbf24,#f472b6,#c084fc); animation: orb-glow 4s ease-in-out infinite; overflow: hidden; position: relative; }
+        .orb::before { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.35), rgba(180,140,255,.6) 40%, rgba(100,80,200,.8)); }
+        .cta-title { font-size: clamp(28px,4vw,42px); font-weight: 800; letter-spacing: -.03em; color: #f0f0f5; margin-bottom: 16px; }
+        .cta-sub { font-size: 16px; color: #8a8a9a; margin-bottom: 36px; line-height: 1.7; }
+        .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+        /* Footer */
+        .footer { position: relative; z-index: 1; border-top: 1px solid rgba(255,255,255,0.06); padding: 36px 32px; }
+        .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+        .footer-logo { display: flex; align-items: center; gap: 8px; }
+        .footer-links { display: flex; gap: 6px; margin-left: auto; }
+        .footer-links a { font-size: 13px; color: #44445a; text-decoration: none; padding: 5px 10px; border-radius: 6px; transition: all .14s; }
+        .footer-links a:hover { color: #8a8a9a; background: rgba(255,255,255,0.04); }
+        .footer-copy { font-size: 12px; color: #44445a; width: 100%; padding-top: 12px; }
+
+        /* Auth modal */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); z-index: 200; }
+        .auth-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 201; background: #16161e; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.6); }
+        .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; color: #44445a; font-size: 16px; cursor: pointer; padding: 6px; border-radius: 6px; transition: all .14s; }
+        .modal-close:hover { background: rgba(255,255,255,0.06); color: #8a8a9a; }
+        .auth-orb { font-size: 36px; margin-bottom: 16px; }
+        .auth-title { font-size: 22px; font-weight: 700; color: #f0f0f5; margin-bottom: 8px; }
+        .auth-sub { font-size: 14px; color: #8a8a9a; margin-bottom: 28px; line-height: 1.6; }
+        .auth-btn-primary { display: block; width: 100%; padding: 12px; border-radius: 10px; border: none; background: linear-gradient(135deg,#7c6af7,#4f8ef7); color: #fff; font-family: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: all .2s; box-shadow: 0 0 20px rgba(124,106,247,.35); margin-bottom: 16px; }
+        .auth-btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+        .auth-divider { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .auth-divider::before,.auth-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+        .auth-divider span { font-size: 12px; color: #44445a; white-space: nowrap; }
+        .auth-btn-secondary { display: block; width: 100%; padding: 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: #f0f0f5; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .2s; }
+        .auth-btn-secondary:hover { background: rgba(255,255,255,0.08); }
+
+        @media(max-width:768px){
+          .features-grid { grid-template-columns: 1fr; }
+          .problems-grid { grid-template-columns: 1fr; }
+          .nav-links .nav-link { display: none; }
+          .footer-links { margin-left: 0; }
+        }
+      `}</style>
         </div>
     )
 }
