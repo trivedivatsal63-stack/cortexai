@@ -2,23 +2,38 @@ import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { routeToModel, detectDiagramNeeded } from '@/lib/model-router'
 import { buildSystemPrompt } from '@/lib/prompts/system-prompt'
+import { checkUsageLimit, incrementUsage } from '@/lib/usage-tracker'
 
 export async function POST(req: Request) {
     const { userId } = await auth()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    // ── 1. Check limit BEFORE calling Groq ──────────────────────────────────────
+    const usage = await checkUsageLimit(userId)
+    if (!usage.allowed) {
+        return NextResponse.json({
+            error: 'limit_exceeded',
+            message: `You've used all ${usage.limit} queries for today. Resets at midnight UTC.`,
+            usage: {
+                used: usage.used,
+                limit: usage.limit,
+                remaining: 0,
+                tier: usage.tier,
+                resetAt: usage.resetAt,
+                percentUsed: 100,
+            },
+        }, { status: 429 })
+    }
+
+    // ── 2. Parse request ─────────────────────────────────────────────────────────
     const { messages, mode, answerType, examMode } = await req.json()
 
     if (!messages || messages.length === 0) {
         return NextResponse.json({ error: 'Query is required' }, { status: 400 })
     }
 
-    // Get the latest user message for routing decisions
     const lastUserMessage = messages.filter((m: any) => m.role === 'user').at(-1)?.content ?? ''
-
     const needsDiagram = detectDiagramNeeded(lastUserMessage)
-
-    // Map your existing chat modes to the router's mode format
     const routerMode = mode === 'kb' || mode === 'general' ? 'learning' : 'cybersecurity'
 
     const decision = routeToModel({
@@ -41,13 +56,17 @@ export async function POST(req: Request) {
 
     const groqMessages = [
         { role: 'system', content: systemPrompt },
-        ...messages.slice(-8), // last 8 messages for context
+        ...messages.slice(-8).map((m: any) => ({
+            role: m.role,
+            content: m.content
+        }))
     ]
 
+    // ── 3. Call Groq ─────────────────────────────────────────────────────────────
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+            Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -65,6 +84,7 @@ export async function POST(req: Request) {
 
     const text = await response.text()
     let reply = ''
+
     try {
         const data = JSON.parse(text)
         if (data.error) {
@@ -77,5 +97,19 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'AI service unavailable' }, { status: 503 })
     }
 
-    return NextResponse.json({ reply })
+    // ── 4. Increment AFTER successful response ───────────────────────────────────
+    await incrementUsage(userId)
+
+    // ── 5. Return reply + updated usage (frontend meter updates instantly) ───────
+    return NextResponse.json({
+        reply,
+        usage: {
+            used: usage.used + 1,
+            limit: usage.limit,
+            remaining: usage.remaining - 1,
+            tier: usage.tier,
+            resetAt: usage.resetAt,
+            percentUsed: Math.round(((usage.used + 1) / usage.limit) * 100),
+        },
+    })
 }

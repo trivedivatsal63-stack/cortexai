@@ -7,7 +7,8 @@ export async function GET(
     { params }: { params: Promise<{ 'chat-id': string }> }
 ) {
     const { userId } = await auth()
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!userId)
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { 'chat-id': chatId } = await params
     const { client } = createSupabaseServerClient(userId)
@@ -19,7 +20,8 @@ export async function GET(
         .eq('user_id', userId)
         .single()
 
-    if (!chat) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    if (!chat)
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     const { data, error } = await client
         .from('messages')
@@ -27,20 +29,24 @@ export async function GET(
         .eq('chat_id', chatId)
         .order('created_at', { ascending: true })
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error)
+        return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ messages: data })
 }
+
 
 export async function POST(
     req: Request,
     { params }: { params: Promise<{ 'chat-id': string }> }
 ) {
     const { userId } = await auth()
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!userId)
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { 'chat-id': chatId } = await params
     const { role, content } = await req.json()
+
     const { client } = createSupabaseServerClient(userId)
 
     const { data: chat } = await client
@@ -50,11 +56,16 @@ export async function POST(
         .eq('user_id', userId)
         .single()
 
-    if (!chat) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!chat)
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { data, error } = await client
         .from('messages')
-        .insert({ chat_id: chatId, role, content })
+        .insert({
+            chat_id: chatId,
+            role,
+            content
+        })
         .select()
         .single()
 
@@ -63,7 +74,8 @@ export async function POST(
         .update({ updated_at: new Date().toISOString() })
         .eq('id', chatId)
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error)
+        return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ message: data })
 }
