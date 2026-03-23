@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import ReactMarkdown from 'react-markdown'
 
 function CopyBtn({ text }: { text: string }) {
@@ -16,12 +16,12 @@ function CopyBtn({ text }: { text: string }) {
     )
 }
 
-export function AIMessage({ content }: { content: string }) {
+export const AIMessage = memo(function AIMessage({ content }: { content: string }) {
     return (
-        <div className="msg-ai">
+        <>
             <div className="msg-ai-who">
                 <div className="msg-ai-dot" />
-                CyberAI
+                CortexAI
             </div>
             <div className="ai-prose">
                 <ReactMarkdown
@@ -53,6 +53,6 @@ export function AIMessage({ content }: { content: string }) {
             <div className="msg-actions">
                 <CopyBtn text={content} />
             </div>
-        </div>
+        </>
     )
-}
+})

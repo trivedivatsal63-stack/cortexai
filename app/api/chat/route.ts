@@ -8,12 +8,21 @@ export async function POST(req: Request) {
     const { userId } = await auth()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // ── 1. Check limit BEFORE calling Groq ──────────────────────────────────────
+    // ── STEP 1: Check limit BEFORE calling Groq ──────────────────────────────
+    // usage.used  = messages already sent today (before this request)
+    // usage.limit = max allowed (e.g. 10)
+    // allowed     = used < limit  ← strictly less than
+    //
+    // Example:
+    //   used=0,  limit=10 → allowed ✅ (1st message)
+    //   used=9,  limit=10 → allowed ✅ (10th message)
+    //   used=10, limit=10 → blocked  ❌ (would be 11th)
     const usage = await checkUsageLimit(userId)
+
     if (!usage.allowed) {
         return NextResponse.json({
             error: 'limit_exceeded',
-            message: `You've used all ${usage.limit} queries for today. Resets at midnight UTC.`,
+            message: `Daily limit reached. You've used all ${usage.limit} queries. Resets at midnight UTC.`,
             usage: {
                 used: usage.used,
                 limit: usage.limit,
@@ -25,7 +34,7 @@ export async function POST(req: Request) {
         }, { status: 429 })
     }
 
-    // ── 2. Parse request ─────────────────────────────────────────────────────────
+    // ── STEP 2: Parse request ─────────────────────────────────────────────────
     const { messages, mode, answerType, examMode } = await req.json()
 
     if (!messages || messages.length === 0) {
@@ -62,7 +71,7 @@ export async function POST(req: Request) {
         }))
     ]
 
-    // ── 3. Call Groq ─────────────────────────────────────────────────────────────
+    // ── STEP 3: Call Groq ─────────────────────────────────────────────────────
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -97,19 +106,27 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'AI service unavailable' }, { status: 503 })
     }
 
-    // ── 4. Increment AFTER successful response ───────────────────────────────────
+    // ── STEP 4: Increment AFTER success — never charge for errors ────────────
     await incrementUsage(userId)
 
-    // ── 5. Return reply + updated usage (frontend meter updates instantly) ───────
+    // ── STEP 5: Return reply + updated usage ──────────────────────────────────
+    // used + 1 because we just incremented
+    const newUsed = usage.used + 1
+    const newRemaining = Math.max(0, usage.limit - newUsed)
+    const newPct = Math.min(100, Math.round((newUsed / usage.limit) * 100))
+
     return NextResponse.json({
         reply,
         usage: {
-            used: usage.used + 1,
+            used: newUsed,
             limit: usage.limit,
-            remaining: usage.remaining - 1,
+            remaining: newRemaining,
             tier: usage.tier,
             resetAt: usage.resetAt,
-            percentUsed: Math.round(((usage.used + 1) / usage.limit) * 100),
+            percentUsed: newPct,
+            // allowed reflects state AFTER this message
+            // used=10, limit=10 → allowed=false → next request will be blocked
+            allowed: newUsed < usage.limit,
         },
     })
 }

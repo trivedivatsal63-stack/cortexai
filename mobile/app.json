@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CyberAI",
-    "slug": "cyberai",
+    "name": "CortexAI",
+    "slug": "CortexAI",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -10,10 +10,10 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.cyberai.app"
+      "bundleIdentifier": "com.CortexAI.app"
     },
     "android": {
-      "package": "com.cyberai.app",
+      "package": "com.CortexAI.app",
       "adaptiveIcon": {
         "backgroundColor": "#0d0d12"
       }
@@ -23,7 +23,7 @@
       "expo-secure-store",
       "expo-font"
     ],
-    "scheme": "cyberai",
+    "scheme": "CortexAI",
     "experiments": {
       "typedRoutes": true
     },

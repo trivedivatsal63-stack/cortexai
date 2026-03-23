@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Replace with your actual deployed URL
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://your-cyberai-app.vercel.app';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://your-CortexAI-app.vercel.app';
 
 async function getAuthToken(): Promise<string | null> {
   return await AsyncStorage.getItem('clerk_token');
@@ -119,7 +119,7 @@ export async function streamChat(
               full += text;
               onChunk(text);
             }
-          } catch {}
+          } catch { }
         }
       }
     }

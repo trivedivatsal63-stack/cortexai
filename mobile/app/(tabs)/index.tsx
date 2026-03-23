@@ -115,7 +115,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
           <View style={styles.logoRow}>
             <View style={styles.logoIcon}><Text style={{ fontSize: 14 }}>⚡</Text></View>
-            <Text style={styles.logoText}>CyberAI</Text>
+            <Text style={styles.logoText}>CortexAI</Text>
           </View>
           <TouchableOpacity
             style={styles.headerRight}
@@ -186,7 +186,7 @@ export default function HomeScreen() {
         <InputBox
           onSend={handleSend}
           disabled={!isPro && queryCount >= FREE_LIMIT}
-          placeholder={!isPro && queryCount >= FREE_LIMIT ? '🔒 Daily limit reached · Upgrade to Pro' : 'Ask CyberAI anything...'}
+          placeholder={!isPro && queryCount >= FREE_LIMIT ? '🔒 Daily limit reached · Upgrade to Pro' : 'Ask CortexAI anything...'}
           examMode={examMode}
           onToggleExamMode={() => setExamMode(e => !e)}
         />
@@ -202,7 +202,7 @@ export default function HomeScreen() {
         maxQueries={FREE_LIMIT}
         isPro={isPro}
         onSelectChat={(chat) => router.push({ pathname: '/chat/[id]', params: { id: chat.id } })}
-        onNewChat={() => {}}
+        onNewChat={() => { }}
         onDeleteChat={handleDeleteChat}
         onRenameChat={handleRenameChat}
         onSetMode={setActiveMode}

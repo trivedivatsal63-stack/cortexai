@@ -29,7 +29,7 @@ export default function BlogArticleScreen() {
 
   const handleShare = async () => {
     if (!post) return;
-    await Share.share({ message: `Check out "${post.title}" on CyberAI!` });
+    await Share.share({ message: `Check out "${post.title}" on CortexAI!` });
   };
 
   if (!post) {
@@ -92,7 +92,7 @@ export default function BlogArticleScreen() {
               style={styles.askAIGradient}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             >
-              <Text style={styles.askAITitle}>⚡ Ask CyberAI about this topic</Text>
+              <Text style={styles.askAITitle}>⚡ Ask CortexAI about this topic</Text>
               <Text style={styles.askAISub}>Get a personalized explanation, exam notes, or practice questions</Text>
             </LinearGradient>
           </TouchableOpacity>

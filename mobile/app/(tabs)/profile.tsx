@@ -60,7 +60,7 @@ export default function ProfileScreen() {
                 <Text style={styles.userAvatarText}>S</Text>
               </View>
               <Text style={styles.userName}>Student</Text>
-              <Text style={styles.userEmail}>student@cyberai.app</Text>
+              <Text style={styles.userEmail}>student@CortexAI.app</Text>
               <View style={styles.planBadge}>
                 <Text style={styles.planBadgeText}>
                   {isPro ? '⚡ Pro Plan' : '🆓 Free Plan'}
@@ -150,7 +150,7 @@ export default function ProfileScreen() {
               <TouchableOpacity style={styles.settingRow}>
                 <View style={styles.settingLeft}>
                   <Text style={styles.settingIcon}>ℹ️</Text>
-                  <Text style={styles.settingLabel}>About CyberAI</Text>
+                  <Text style={styles.settingLabel}>About CortexAI</Text>
                 </View>
                 <Text style={styles.settingArrow}>›</Text>
               </TouchableOpacity>
@@ -187,7 +187,7 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>CyberAI v1.0 · Built for CS Students</Text>
+            <Text style={styles.footerText}>CortexAI v1.0 · Built for CS Students</Text>
           </View>
         </ScrollView>
       </SafeAreaView>

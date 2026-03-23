@@ -1,4 +1,4 @@
-# CyberAI Mobile App
+# CortexAI Mobile App
 
 Premium AI learning platform for CS students. React Native + Expo.
 
@@ -33,7 +33,7 @@ npx expo start --ios
 ## File Structure
 
 ```
-cyberai-mobile/
+CortexAI-mobile/
 ├── app/
 │   ├── _layout.tsx          # Root layout
 │   ├── (tabs)/

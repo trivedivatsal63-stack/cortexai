@@ -94,7 +94,7 @@ export default function SidebarDrawer({
           <View style={styles.header}>
             <View style={styles.logoRow}>
               <View style={styles.logoIcon}><Text style={styles.logoEmoji}>⚡</Text></View>
-              <Text style={styles.logoText}>CyberAI</Text>
+              <Text style={styles.logoText}>CortexAI</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Text style={styles.closeBtnText}>✕</Text>

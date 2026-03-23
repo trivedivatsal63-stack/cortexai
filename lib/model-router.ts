@@ -7,7 +7,7 @@ type AnswerType = "short" | "detailed";
 interface RouteDecision {
     model: string;
     maxTokens: number;
-    provider: "groq" | "together" | "openrouter";
+    provider: "groq";
     reasoning: string;
 }
 
@@ -18,32 +18,43 @@ interface QueryContext {
     examMode: boolean;
 }
 
-// Keyword signals for complexity detection
+// ─────────────────────────────
+// Complexity detection
+// ─────────────────────────────
+
 const SIMPLE_SIGNALS = [
-    /^what is /i, /^define /i, /^who is /i, /^what does .+ mean/i,
-    /^full form of/i, /^expand /i, /^acronym/i,
+    /^what is /i,
+    /^define /i,
+    /^who is /i,
+    /^full form/i,
+    /^expand/i,
 ];
 
 const COMPLEX_SIGNALS = [
-    /explain in detail/i, /how does .+ work/i, /compare .+ and/i,
-    /difference between/i, /implement/i, /write (a|the) /i,
-    /design/i, /architecture/i, /step.by.step/i, /with example/i,
+    /explain in detail/i,
+    /how does .+ work/i,
+    /compare/i,
+    /difference between/i,
+    /architecture/i,
+    /step.by.step/i,
+    /implement/i,
+    /design/i,
 ];
 
 const DIAGRAM_SIGNALS = [
-    /diagram/i, /flowchart/i, /draw/i, /visualize/i,
-    /show me/i, /architecture/i, /topology/i,
+    /diagram/i,
+    /flowchart/i,
+    /draw/i,
+    /visual/i,
+    /architecture/i,
 ];
 
 function detectComplexity(query: string): Complexity {
-    const q = query.toLowerCase();
+    const words = query.split(/\s+/).length;
 
-    // Word count heuristic
-    const wordCount = q.split(/\s+/).length;
-    if (wordCount <= 6) return "simple";
-    if (wordCount >= 20) return "complex";
+    if (words <= 5) return "simple";
+    if (words >= 18) return "complex";
 
-    // Keyword matching
     if (SIMPLE_SIGNALS.some(p => p.test(query))) return "simple";
     if (COMPLEX_SIGNALS.some(p => p.test(query))) return "complex";
 
@@ -54,55 +65,81 @@ export function detectDiagramNeeded(query: string): boolean {
     return DIAGRAM_SIGNALS.some(p => p.test(query));
 }
 
+// ─────────────────────────────
+// Model constants
+// ─────────────────────────────
+
+// Keep model IDs in one place so a future deprecation is a one-line change.
+const MODELS = {
+    fast: "llama-3.1-8b-instant",      // ✅ active  — simple / exam
+    balanced: "llama-3.3-70b-versatile",   // ✅ active  — medium / complex / diagrams
+    //         "llama-3.1-70b-versatile"    // ❌ decommissioned 2025-01-24
+} as const;
+
+// ─────────────────────────────
+// Router
+// ─────────────────────────────
+
 export function routeToModel(ctx: QueryContext): RouteDecision {
+
     const complexity = detectComplexity(ctx.query);
     const needsDiagram = detectDiagramNeeded(ctx.query);
 
-    // Exam mode + simple → smallest model, very concise
-    if (ctx.examMode && complexity === "simple") {
+    // Exam mode → cheapest
+    if (ctx.examMode) {
         return {
-            model: "llama3-8b-8192",
+            model: MODELS.fast,
             maxTokens: ctx.answerType === "short" ? 200 : 400,
             provider: "groq",
-            reasoning: "Exam mode + simple query → fastest, cheapest model",
+            reasoning: "Exam mode → 8B fast",
         };
     }
 
-    // Cybersecurity mode always gets at least medium model
-    if (ctx.mode === "cybersecurity" && complexity !== "simple") {
+    // Cybersecurity complex → 70B
+    if (ctx.mode === "cybersecurity" && complexity === "complex") {
         return {
-            model: "llama-3.1-70b-versatile",
-            maxTokens: ctx.answerType === "detailed" ? 1200 : 600,
+            model: MODELS.balanced,
+            maxTokens: 1600,
             provider: "groq",
-            reasoning: "Cyber mode + medium/complex → Mixtral for accuracy",
+            reasoning: "Cybersecurity complex → 70B versatile",
         };
     }
 
-    // Diagrams or complex explanations → 70B
-    if (needsDiagram || complexity === "complex") {
+    // Diagram → 70B
+    if (needsDiagram) {
         return {
-            model: "llama-3.3-70b-versatile",
-            maxTokens: ctx.answerType === "detailed" ? 2000 : 1000,
+            model: MODELS.balanced,
+            maxTokens: 1400,
             provider: "groq",
-            reasoning: "Complex/diagram query → 70B for depth",
+            reasoning: "Diagram requested → 70B versatile",
         };
     }
 
-    // Medium complexity → Mixtral
+    // Complex → 70B
+    if (complexity === "complex") {
+        return {
+            model: MODELS.balanced,
+            maxTokens: 1400,
+            provider: "groq",
+            reasoning: "Complex reasoning → 70B versatile",
+        };
+    }
+
+    // Medium → 70B  (was: llama-3.1-70b-versatile — decommissioned)
     if (complexity === "medium") {
         return {
-            model: "mixtral-8x7b-32768",
-            maxTokens: ctx.answerType === "detailed" ? 800 : 400,
+            model: MODELS.balanced,
+            maxTokens: ctx.answerType === "detailed" ? 900 : 500,
             provider: "groq",
-            reasoning: "Medium complexity → Mixtral balance",
+            reasoning: "Medium complexity → 70B versatile",
         };
     }
 
-    // Default: simple → 8B
+    // Simple → 8B fast
     return {
-        model: "llama-3.1-8b-instant",
-        maxTokens: ctx.answerType === "short" ? 300 : 600,
+        model: MODELS.fast,
+        maxTokens: ctx.answerType === "short" ? 250 : 500,
         provider: "groq",
-        reasoning: "Simple query → 8B fast and cheap",
+        reasoning: "Simple → 8B fast",
     };
 }

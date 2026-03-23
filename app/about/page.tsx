@@ -6,21 +6,21 @@ const TEAM = [
         role: 'Founder & Product',
         avatar: 'VT',
         color: '#7c6af7',
-        bio: 'Saw the gap in how cybersecurity was being taught to students. Built CyberAI to fix it — combining AI, structured learning, and a product that actually feels good to use.',
+        bio: 'Saw the gap in how cybersecurity was being taught to students. Built CortexAI to fix it — combining AI, structured learning, and a product that actually feels good to use.',
     },
     {
         name: 'Rajeshwar',
         role: 'Backend Engineer',
         avatar: 'RJ',
         color: '#4f8ef7',
-        bio: 'Built the infrastructure that powers CyberAI — from the AI routing system and database architecture to the API layer and session management.',
+        bio: 'Built the infrastructure that powers CortexAI — from the AI routing system and database architecture to the API layer and session management.',
     },
     {
         name: 'Bhushan',
         role: 'Frontend Engineer',
         avatar: 'BH',
         color: '#10b981',
-        bio: 'Crafted the interfaces students interact with every day. Focused on making CyberAI feel fast, intuitive, and premium — without the complexity.',
+        bio: 'Crafted the interfaces students interact with every day. Focused on making CortexAI feel fast, intuitive, and premium — without the complexity.',
     },
     {
         name: 'Makran',
@@ -34,7 +34,7 @@ const TEAM = [
 const TIMELINE = [
     { year: '2024', title: 'The frustration begins', desc: 'As CS students, we realized no tool existed that could explain cybersecurity concepts clearly, quickly, and in exam-ready format.' },
     { year: 'Q1 2025', title: 'First prototype built', desc: 'A basic chatbot that could answer cybersecurity questions. Shared it with 20 classmates. The feedback was overwhelming — they wanted more.' },
-    { year: 'Q2 2025', title: 'CyberAI v1 launched', desc: 'Full platform with authentication, chat history, 8 knowledge domains, and smart AI routing. First 500 students signed up in the first week.' },
+    { year: 'Q2 2025', title: 'CortexAI v1 launched', desc: 'Full platform with authentication, chat history, 8 knowledge domains, and smart AI routing. First 500 students signed up in the first week.' },
     { year: 'Today', title: 'Growing fast', desc: 'Used by 2,000+ students across India. Continuously improving based on real student feedback and exam patterns.' },
 ]
 
@@ -49,7 +49,7 @@ export default function AboutPage() {
                 <div className="nav-inner">
                     <a href="/" className="nav-logo">
                         <div className="nav-logo-icon">⚡</div>
-                        <span className="nav-logo-text">CyberAI</span>
+                        <span className="nav-logo-text">CortexAI</span>
                     </a>
                     <div className="nav-links">
                         <a href="/" className="nav-link">Home</a>
@@ -63,14 +63,14 @@ export default function AboutPage() {
             <section className="about-hero">
                 <div className="section-label">About Us</div>
                 <h1 className="about-title">We're students who got tired<br /><span className="grad">of bad cybersecurity education</span></h1>
-                <p className="about-sub">CyberAI was built by a small team of CS students who experienced the problem firsthand — and decided to fix it.</p>
+                <p className="about-sub">CortexAI was built by a small team of CS students who experienced the problem firsthand — and decided to fix it.</p>
             </section>
 
             {/* Problem we solve */}
             <section className="section">
                 <div className="section-inner two-col">
                     <div className="col-text">
-                        <div className="section-label">Why CyberAI Exists</div>
+                        <div className="section-label">Why CortexAI Exists</div>
                         <h2 className="section-h2">Students were being left behind</h2>
                         <p className="body-text">Cybersecurity is one of the most in-demand fields in tech — but the learning resources are stuck in the past. Textbooks written for professionals. YouTube videos that go 3 hours deep. Stack Overflow threads that assume you already know everything.</p>
                         <p className="body-text">We watched our classmates struggle through DCN exams, fail to understand buffer overflows, and spend hours trying to get a straight answer on how SQL injection actually works.</p>
@@ -80,7 +80,7 @@ export default function AboutPage() {
                     <div className="col-cards">
                         {[
                             { icon: '🎓', title: 'Built for students', desc: 'Every answer is structured for learning — definition first, then step-by-step, then exam summary.' },
-                            { icon: '⚡', title: 'Instant clarity', desc: 'No more spending 2 hours reading to find one clear explanation. CyberAI gets to the point.' },
+                            { icon: '⚡', title: 'Instant clarity', desc: 'No more spending 2 hours reading to find one clear explanation. CortexAI gets to the point.' },
                             { icon: '🎯', title: 'Exam focused', desc: 'Everything is designed around how students are tested — not how professionals use the knowledge.' },
                         ].map((c, i) => (
                             <div key={i} className="mini-card">
@@ -99,16 +99,16 @@ export default function AboutPage() {
             <section className="section vision-section">
                 <div className="section-inner">
                     <div className="section-label">The Future</div>
-                    <h2 className="section-h2">What CyberAI will become</h2>
-                    <p className="body-text" style={{ maxWidth: 640, marginBottom: 48 }}>We're just getting started. CyberAI isn't just a Q&A bot — it's becoming the complete learning platform for every CS student in India and beyond.</p>
+                    <h2 className="section-h2">What CortexAI will become</h2>
+                    <p className="body-text" style={{ maxWidth: 640, marginBottom: 48 }}>We're just getting started. CortexAI isn't just a Q&A bot — it's becoming the complete learning platform for every CS student in India and beyond.</p>
                     <div className="vision-grid">
                         {[
-                            { icon: '🗺', title: 'Personalized Learning Paths', desc: 'CyberAI will understand where you are in your journey and guide you step by step — from beginner to job-ready.' },
+                            { icon: '🗺', title: 'Personalized Learning Paths', desc: 'CortexAI will understand where you are in your journey and guide you step by step — from beginner to job-ready.' },
                             { icon: '📋', title: 'Auto-Generated Exam Notes', desc: 'Upload your syllabus. Get a complete, structured study guide tailored exactly to your paper.' },
                             { icon: '🧪', title: 'Practice & Mock Tests', desc: 'Real exam-style questions with detailed explanations. Track your progress over time.' },
                             { icon: '🌐', title: 'Live CVE & Threat Feed', desc: 'Stay updated with real-world vulnerabilities. Learn by doing — with current, real examples.' },
                             { icon: '👥', title: 'Study Groups & Collaboration', desc: 'Work through problems with classmates in shared sessions. Learn together.' },
-                            { icon: '📱', title: 'Native Mobile App', desc: 'Study on the go. Full CyberAI experience on Android and iOS, built for students.' },
+                            { icon: '📱', title: 'Native Mobile App', desc: 'Study on the go. Full CortexAI experience on Android and iOS, built for students.' },
                         ].map((v, i) => (
                             <div key={i} className="vision-card">
                                 <div className="vision-icon">{v.icon}</div>
@@ -166,7 +166,7 @@ export default function AboutPage() {
                 <div className="section-label">Ready?</div>
                 <h2 className="section-h2">Start learning smarter today</h2>
                 <p className="body-text" style={{ maxWidth: 480, margin: '0 auto 36px' }}>Free for students. No credit card required. Just sign up and start asking questions.</p>
-                <a href="/chat" className="btn-primary">Open CyberAI →</a>
+                <a href="/chat" className="btn-primary">Open CortexAI →</a>
             </section>
 
             {/* Footer */}
@@ -174,14 +174,14 @@ export default function AboutPage() {
                 <div className="footer-inner">
                     <div className="footer-logo">
                         <div className="nav-logo-icon" style={{ width: 24, height: 24, fontSize: 12 }}>⚡</div>
-                        <span style={{ fontWeight: 700, color: '#f0f0f5', fontSize: 15 }}>CyberAI</span>
+                        <span style={{ fontWeight: 700, color: '#f0f0f5', fontSize: 15 }}>CortexAI</span>
                     </div>
                     <div className="footer-links">
                         <a href="/">Home</a>
                         <a href="/about">About</a>
                         <a href="/chat">App</a>
                     </div>
-                    <div className="footer-copy">© 2025 CyberAI · Built by students, for students · India 🇮🇳</div>
+                    <div className="footer-copy">© 2025 CortexAI · Built by students, for students · India 🇮🇳</div>
                 </div>
             </footer>
 

@@ -49,7 +49,7 @@ export default function InputBox({ onSend, disabled, placeholder, examMode, onTo
           style={styles.input}
           value={text}
           onChangeText={setText}
-          placeholder={placeholder || 'Message CyberAI...'}
+          placeholder={placeholder || 'Message CortexAI...'}
           placeholderTextColor={colors.text3}
           multiline
           maxLength={4000}

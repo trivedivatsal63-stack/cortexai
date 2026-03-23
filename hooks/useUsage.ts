@@ -3,19 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { UsageStatus } from '@/lib/usage-tracker'
 
-/**
- * useUsage hook
- *
- * Fetches usage on mount. After that, the chat route returns
- * updated usage in its response body — call `syncUsage(newUsage)`
- * to update without an extra round-trip.
- *
- * Usage:
- *   const { usage, loading, syncUsage } = useUsage()
- *
- *   // After receiving chat response:
- *   if (data.usage) syncUsage(data.usage)
- */
 export function useUsage() {
     const [usage, setUsage] = useState<UsageStatus | null>(null)
     const [loading, setLoading] = useState(true)
@@ -36,22 +23,29 @@ export function useUsage() {
         }
     }, [])
 
-    // Fetch on mount
-    useEffect(() => {
-        fetchUsage()
-    }, [fetchUsage])
+    useEffect(() => { fetchUsage() }, [fetchUsage])
 
-    // Called by the chat page after each successful message —
-    // avoids a second /api/usage round-trip per query.
+    // Called after each successful message — chat route returns updated usage
+    // so we don't need a second /api/usage round-trip
     const syncUsage = useCallback((newUsage: UsageStatus) => {
         setUsage(newUsage)
     }, [])
 
-    // Is the user at or above 80% of their limit?
-    const isNearLimit = usage ? usage.percentUsed >= 80 : false
+    // FIX: isAtLimit = usage exists AND allowed is false
+    // This means the user has already used all their queries
+    // DO NOT use percentUsed >= 100 — that was causing premature blocking
+    const isAtLimit = usage !== null && usage.allowed === false
 
-    // Is the user completely out of queries?
-    const isAtLimit = usage ? !usage.allowed : false
+    // Near limit = 80% or more used but NOT yet at limit
+    const isNearLimit = usage !== null && usage.percentUsed >= 80 && !isAtLimit
 
-    return { usage, loading, error, syncUsage, refetch: fetchUsage, isNearLimit, isAtLimit }
+    return {
+        usage,
+        loading,
+        error,
+        syncUsage,
+        refetch: fetchUsage,
+        isAtLimit,
+        isNearLimit,
+    }
 }

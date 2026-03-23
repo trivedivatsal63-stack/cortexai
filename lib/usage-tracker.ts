@@ -1,7 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 
-// ── Create client inside a function so env vars are always available ──────────
-// DO NOT create at module level — Next.js serverless won't have env vars yet.
 function getSupabase() {
     return createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,16 +8,8 @@ function getSupabase() {
     )
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-export const LIMITS = {
-    free: 10,
-    pro: 500,
-} as const
-
+export const LIMITS = { free: 10, pro: 500 } as const
 export type Tier = keyof typeof LIMITS
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface UsageStatus {
     allowed: boolean
@@ -27,28 +17,21 @@ export interface UsageStatus {
     limit: number
     remaining: number
     tier: Tier
-    resetAt: string   // ISO string — next midnight UTC
+    resetAt: string
     percentUsed: number
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function getTodayUTC(): string {
-    return new Date().toISOString().slice(0, 10) // "2026-03-22"
+    return new Date().toISOString().slice(0, 10)
 }
 
 function getNextMidnightUTC(): string {
     const now = new Date()
-    const midnight = new Date(Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate() + 1,
+    return new Date(Date.UTC(
+        now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1,
         0, 0, 0, 0
-    ))
-    return midnight.toISOString()
+    )).toISOString()
 }
-
-// ─── Core Functions ───────────────────────────────────────────────────────────
 
 async function getUserTier(userId: string): Promise<Tier> {
     const { data } = await getSupabase()
@@ -58,47 +41,49 @@ async function getUserTier(userId: string): Promise<Tier> {
         .order('created_at', { ascending: false })
         .limit(1)
         .single()
-
     return (data?.tier as Tier) ?? 'free'
 }
 
-/**
- * Checks if a user is allowed to make a query.
- * Call BEFORE Groq — blocked users never spend tokens.
- */
-export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
-    const today = getTodayUTC()
-    const tier = await getUserTier(userId)
-    const limit = LIMITS[tier]
-
+// Returns how many queries the user has used TODAY
+async function getTodayCount(userId: string): Promise<number> {
     const { data, error } = await getSupabase()
         .from('usage_logs')
         .select('query_count')
         .eq('user_id', userId)
-        .eq('date', today)
+        .eq('date', getTodayUTC())
         .single()
 
-    // PGRST116 = no rows yet — user hasn't queried today, that's fine
-    if (error && error.code !== 'PGRST116') {
-        console.error('[usage-tracker] checkUsageLimit error:', error)
-        // Fail open — never block user on DB errors
-        return {
-            allowed: true,
-            used: 0,
-            limit,
-            remaining: limit,
-            tier,
-            resetAt: getNextMidnightUTC(),
-            percentUsed: 0,
-        }
+    // PGRST116 = no row yet — user hasn't sent any message today
+    if (error && error.code === 'PGRST116') return 0
+    if (error) {
+        console.error('[usage-tracker] getTodayCount error:', error)
+        return 0 // fail open — never block on DB errors
     }
+    return data?.query_count ?? 0
+}
 
-    const used = data?.query_count ?? 0
+/**
+ * checkUsageLimit
+ *
+ * FIX: allowed = used < limit   (strictly less than)
+ *      NOT  used <= limit
+ *      NOT  used >= limit
+ *
+ * A user with used=10 and limit=10 is NOT allowed.
+ * A user with used=9  and limit=10 IS  allowed (their 10th message).
+ */
+export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
+    const tier = await getUserTier(userId)
+    const limit = LIMITS[tier]
+    const used = await getTodayCount(userId)
+
+    // ✅ CORRECT: block only when used >= limit (they've already used all 10)
+    const allowed = used < limit
     const remaining = Math.max(0, limit - used)
-    const percentUsed = Math.round((used / limit) * 100)
+    const percentUsed = Math.min(100, Math.round((used / limit) * 100))
 
     return {
-        allowed: used < limit,
+        allowed,
         used,
         limit,
         remaining,
@@ -109,8 +94,10 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
 }
 
 /**
- * Atomically increments today's query count.
- * Call AFTER a successful Groq response — don't charge for errors.
+ * incrementUsage
+ *
+ * FIX: call this AFTER a successful Groq response only.
+ * Uses an atomic upsert so concurrent requests can't double-count.
  */
 export async function incrementUsage(userId: string): Promise<void> {
     const today = getTodayUTC()

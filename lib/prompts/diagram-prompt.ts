@@ -1,8 +1,8 @@
 // lib/prompts/diagram-prompt.ts
 
 export function buildDiagramPrompt(query: string): string {
-    return `
-You are CyberAI's diagram generation engine.
+  return `
+You are CortexAI's diagram generation engine.
 
 When a diagram is appropriate, output it as a Mermaid.js code block ONLY.
 Use this exact format — no explanation before or after the diagram block:

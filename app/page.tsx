@@ -31,7 +31,7 @@ export default function LandingPage() {
                 <div className="nav-inner">
                     <div className="nav-logo">
                         <div className="nav-logo-icon">⚡</div>
-                        <span className="nav-logo-text">CyberAI</span>
+                        <span className="nav-logo-text">CortexAI</span>
                     </div>
                     <div className="nav-links">
                         <SignInButton mode="modal">
@@ -60,14 +60,14 @@ export default function LandingPage() {
 
                 <p className="hero-sub">
                     Stop struggling with dense textbooks and scattered YouTube videos.<br />
-                    CyberAI explains complex topics clearly, helps you prepare for exams,<br />
+                    CortexAI explains complex topics clearly, helps you prepare for exams,<br />
                     and builds your skills — all in one place.
                 </p>
 
                 <div className="hero-actions">
                     <button className="btn-primary" onClick={() => setShowAuth(true)}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
-                        Try CyberAI — It's Free
+                        Try CortexAI — It's Free
                     </button>
                     <button className="btn-secondary" onClick={() => alert('Download app coming soon! 🚀')}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
@@ -109,12 +109,12 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* ── WHAT CYBERAI DOES ── */}
+            {/* ── WHAT CortexAI DOES ── */}
             <section className="section section-alt">
                 <div className="section-inner">
                     <div className="section-label">The Solution</div>
                     <h2 className="section-title">Your personal cybersecurity tutor</h2>
-                    <p className="section-sub">CyberAI doesn't just answer questions — it teaches.</p>
+                    <p className="section-sub">CortexAI doesn't just answer questions — it teaches.</p>
 
                     <div className="features-grid">
                         {[
@@ -122,7 +122,7 @@ export default function LandingPage() {
                             { icon: '💻', color: '#4f8ef7', title: 'Programming Help', desc: 'From C++ OOP to Python scripting, get clean code examples with explanations tailored to your level.' },
                             { icon: '🔐', color: '#10b981', title: '8 Cybersecurity Domains', desc: 'OS security, networking, malware analysis, cryptography, web security, forensics, reverse engineering, and CTF — all covered.' },
                             { icon: '🧠', color: '#f59e0b', title: 'Smart AI Routing', desc: 'Your query is automatically routed to the right AI model. Simple questions get instant answers. Complex topics get deep dives.' },
-                            { icon: '📖', color: '#ec4899', title: 'Note Generation', desc: 'Ask CyberAI to generate study notes on any topic. Structured, concise, and exam-focused — ready to revise from.' },
+                            { icon: '📖', color: '#ec4899', title: 'Note Generation', desc: 'Ask CortexAI to generate study notes on any topic. Structured, concise, and exam-focused — ready to revise from.' },
                             { icon: '🛠', color: '#22d3ee', title: 'Security Tools Guide', desc: 'Learn how to use Nmap, Metasploit, Burp Suite, sqlmap and more — with real command examples and use cases.' },
                         ].map((f, i) => (
                             <div key={i} className="feature-card" style={{ animationDelay: `${i * 0.07}s` }}>
@@ -143,7 +143,7 @@ export default function LandingPage() {
                         <div className="orb" />
                     </div>
                     <h2 className="cta-title">Ready to learn smarter?</h2>
-                    <p className="cta-sub">Join thousands of CS students who use CyberAI to study better, prepare faster, and understand deeper.</p>
+                    <p className="cta-sub">Join thousands of CS students who use CortexAI to study better, prepare faster, and understand deeper.</p>
                     <div className="cta-btns">
                         <button className="btn-primary" onClick={() => setShowAuth(true)}>
                             Start Learning Free →
@@ -158,7 +158,7 @@ export default function LandingPage() {
                 <div className="footer-inner">
                     <div className="footer-logo">
                         <div className="nav-logo-icon" style={{ width: 24, height: 24, fontSize: 12 }}>⚡</div>
-                        <span style={{ fontWeight: 700, color: '#f0f0f5' }}>CyberAI</span>
+                        <span style={{ fontWeight: 700, color: '#f0f0f5' }}>CortexAI</span>
                     </div>
                     <div className="footer-links">
                         <a href="/about">About</a>
@@ -166,7 +166,7 @@ export default function LandingPage() {
                         <a href="/pricing">Pricing</a>
                         <a href="/chat">App</a>
                     </div>
-                    <div className="footer-copy">© 2025 CyberAI. Built for students, by students.</div>
+                    <div className="footer-copy">© 2025 CortexAI. Built for students, by students.</div>
                 </div>
             </footer>
 
@@ -177,7 +177,7 @@ export default function LandingPage() {
                     <div className="auth-modal">
                         <button className="modal-close" onClick={() => setShowAuth(false)}>✕</button>
                         <div className="auth-orb">⚡</div>
-                        <h3 className="auth-title">Join CyberAI</h3>
+                        <h3 className="auth-title">Join CortexAI</h3>
                         <p className="auth-sub">Free for students. Start learning in seconds.</p>
                         <SignUpButton mode="modal">
                             <button className="auth-btn-primary">Create Free Account</button>
