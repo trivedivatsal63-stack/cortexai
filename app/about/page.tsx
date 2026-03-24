@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 
 const TEAM = [
     {
@@ -32,10 +33,10 @@ const TEAM = [
 ]
 
 const TIMELINE = [
-    { year: '2024', title: 'The frustration begins', desc: 'As CS students, we realized no tool existed that could explain cybersecurity concepts clearly, quickly, and in exam-ready format.' },
-    { year: 'Q1 2025', title: 'First prototype built', desc: 'A basic chatbot that could answer cybersecurity questions. Shared it with 20 classmates. The feedback was overwhelming — they wanted more.' },
-    { year: 'Q2 2025', title: 'CortexAI v1 launched', desc: 'Full platform with authentication, chat history, 8 knowledge domains, and smart AI routing. First 500 students signed up in the first week.' },
-    { year: 'Today', title: 'Growing fast', desc: 'Used by 2,000+ students across India. Continuously improving based on real student feedback and exam patterns.' },
+    { year: '2024', title: 'The frustration begins', desc: 'As students, we realized no tool existed that could explain any subject clearly, quickly, and in an exam-ready format.' },
+    { year: 'Q1 2025', title: 'First prototype built', desc: 'A basic chatbot that could answer questions on any topic. Shared it with 20 classmates. The feedback was overwhelming — they wanted more.' },
+    { year: 'Q2 2025', title: 'CortexAI v1 launched', desc: 'Full platform with authentication, chat history, multiple subjects, and smart AI routing. First 500 students signed up in the first week.' },
+    { year: 'Today', title: 'Growing fast', desc: 'Used by 2,000+ students. Continuously improving based on real student feedback and learning patterns.' },
 ]
 
 export default function AboutPage() {
@@ -48,7 +49,7 @@ export default function AboutPage() {
             <nav className="nav">
                 <div className="nav-inner">
                     <a href="/" className="nav-logo">
-                        <div className="nav-logo-icon">⚡</div>
+                        <Image src="/cortex-icon.png" alt="CortexAI" width={24} height={24} />
                         <span className="nav-logo-text">CortexAI</span>
                     </a>
                     <div className="nav-links">
@@ -62,8 +63,8 @@ export default function AboutPage() {
             {/* Hero */}
             <section className="about-hero">
                 <div className="section-label">About Us</div>
-                <h1 className="about-title">We're students who got tired<br /><span className="grad">of bad cybersecurity education</span></h1>
-                <p className="about-sub">CortexAI was built by a small team of CS students who experienced the problem firsthand — and decided to fix it.</p>
+                <h1 className="about-title">We're students who got tired<br /><span className="grad">of learning the hard way</span></h1>
+                <p className="about-sub">CortexAI is an AI learning assistant built by students who experienced the problem firsthand — and decided to fix it.</p>
             </section>
 
             {/* Problem we solve */}
@@ -72,16 +73,16 @@ export default function AboutPage() {
                     <div className="col-text">
                         <div className="section-label">Why CortexAI Exists</div>
                         <h2 className="section-h2">Students were being left behind</h2>
-                        <p className="body-text">Cybersecurity is one of the most in-demand fields in tech — but the learning resources are stuck in the past. Textbooks written for professionals. YouTube videos that go 3 hours deep. Stack Overflow threads that assume you already know everything.</p>
-                        <p className="body-text">We watched our classmates struggle through DCN exams, fail to understand buffer overflows, and spend hours trying to get a straight answer on how SQL injection actually works.</p>
+                        <p className="body-text">Learning any subject today means navigating through dense textbooks, scattered tutorials, and endless Google searches. Textbooks are written for experts. Videos go on for hours. Explanations assume you already know the basics.</p>
+                        <p className="body-text">We watched our classmates struggle with exams, spend hours trying to understand a single concept, and give up because there was no clear path to understanding.</p>
                         <p className="body-text">There was no tool that could sit with you, explain things at your level, and give you exactly what you needed for your exam in the next 12 hours.</p>
                         <p className="body-text" style={{ color: '#c4b5fd', fontWeight: 500 }}>So we built one.</p>
                     </div>
                     <div className="col-cards">
                         {[
                             { icon: '🎓', title: 'Built for students', desc: 'Every answer is structured for learning — definition first, then step-by-step, then exam summary.' },
-                            { icon: '⚡', title: 'Instant clarity', desc: 'No more spending 2 hours reading to find one clear explanation. CortexAI gets to the point.' },
-                            { icon: '🎯', title: 'Exam focused', desc: 'Everything is designed around how students are tested — not how professionals use the knowledge.' },
+                            { icon: '💡', title: 'Instant clarity', desc: 'No more spending 2 hours reading to find one clear explanation. CortexAI gets to the point.' },
+                            { icon: '🎯', title: 'Exam focused', desc: 'Everything is designed around how students are tested — not how experts use the knowledge.' },
                         ].map((c, i) => (
                             <div key={i} className="mini-card">
                                 <span className="mini-icon">{c.icon}</span>
@@ -100,13 +101,13 @@ export default function AboutPage() {
                 <div className="section-inner">
                     <div className="section-label">The Future</div>
                     <h2 className="section-h2">What CortexAI will become</h2>
-                    <p className="body-text" style={{ maxWidth: 640, marginBottom: 48 }}>We're just getting started. CortexAI isn't just a Q&A bot — it's becoming the complete learning platform for every CS student in India and beyond.</p>
+                    <p className="body-text" style={{ maxWidth: 640, marginBottom: 48 }}>We're just getting started. CortexAI isn't just a Q&A bot — it's becoming the complete learning companion for every student.</p>
                     <div className="vision-grid">
                         {[
-                            { icon: '🗺', title: 'Personalized Learning Paths', desc: 'CortexAI will understand where you are in your journey and guide you step by step — from beginner to job-ready.' },
-                            { icon: '📋', title: 'Auto-Generated Exam Notes', desc: 'Upload your syllabus. Get a complete, structured study guide tailored exactly to your paper.' },
+                            { icon: '🗺', title: 'Personalized Learning Paths', desc: 'CortexAI will understand where you are in your journey and guide you step by step — from beginner to expert.' },
+                            { icon: '📋', title: 'Auto-Generated Study Notes', desc: 'Upload your syllabus. Get a complete, structured study guide tailored exactly to your course.' },
                             { icon: '🧪', title: 'Practice & Mock Tests', desc: 'Real exam-style questions with detailed explanations. Track your progress over time.' },
-                            { icon: '🌐', title: 'Live CVE & Threat Feed', desc: 'Stay updated with real-world vulnerabilities. Learn by doing — with current, real examples.' },
+                            { icon: '🌐', title: 'Multi-Subject Support', desc: 'From Computer Science to Mathematics to Physics — learn any subject with structured explanations.' },
                             { icon: '👥', title: 'Study Groups & Collaboration', desc: 'Work through problems with classmates in shared sessions. Learn together.' },
                             { icon: '📱', title: 'Native Mobile App', desc: 'Study on the go. Full CortexAI experience on Android and iOS, built for students.' },
                         ].map((v, i) => (
@@ -173,8 +174,8 @@ export default function AboutPage() {
             <footer className="footer">
                 <div className="footer-inner">
                     <div className="footer-logo">
-                        <div className="nav-logo-icon" style={{ width: 24, height: 24, fontSize: 12 }}>⚡</div>
-                        <span style={{ fontWeight: 700, color: '#f0f0f5', fontSize: 15 }}>CortexAI</span>
+                        <Image src="/cortex-icon.png" alt="CortexAI" width={18} height={18} style={{ opacity: 0.9 }} />
+                        <span style={{ fontWeight: 700, color: '#f0f0f5', fontSize: 15, opacity: 0.9 }}>CortexAI</span>
                     </div>
                     <div className="footer-links">
                         <a href="/">Home</a>
@@ -203,7 +204,7 @@ export default function AboutPage() {
         .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(12,12,15,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.06); }
         .nav-inner { max-width: 1100px; margin: 0 auto; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
         .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .nav-logo-icon { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg,#7c6af7,#4f8ef7); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
         .nav-logo-text { font-size: 17px; font-weight: 700; color: #f0f0f5; }
         .nav-links { display: flex; align-items: center; gap: 6px; }
         .nav-link { background: none; border: none; font-family: inherit; font-size: 14px; color: #8a8a9a; cursor: pointer; padding: 6px 14px; border-radius: 8px; transition: all .15s; text-decoration: none; }

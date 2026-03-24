@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { SignInButton, SignUpButton, useUser } from '@clerk/nextjs'
+import Image from 'next/image'
 
 export default function LandingPage() {
     const { isSignedIn } = useUser()
@@ -30,7 +31,7 @@ export default function LandingPage() {
             <nav className={`nav ${scrolled ? 'nav-scrolled' : ''}`}>
                 <div className="nav-inner">
                     <div className="nav-logo">
-                        <div className="nav-logo-icon">⚡</div>
+                        <Image src="/cortex-icon.png" alt="CortexAI" width={24} height={24} />
                         <span className="nav-logo-text">CortexAI</span>
                     </div>
                     <div className="nav-links">
@@ -54,20 +55,20 @@ export default function LandingPage() {
                 </div>
 
                 <h1 className="hero-title">
-                    The AI built for<br />
-                    <span className="hero-gradient">Cybersecurity Students</span>
+                    Your AI Learning<br />
+                    <span className="hero-gradient">Companion</span>
                 </h1>
 
                 <p className="hero-sub">
-                    Stop struggling with dense textbooks and scattered YouTube videos.<br />
-                    CortexAI explains complex topics clearly, helps you prepare for exams,<br />
-                    and builds your skills — all in one place.
+                    Learn faster. Understand deeper. Prepare better.<br />
+                    CortexAI helps you understand any subject, prepare for exams,<br />
+                    and study smarter — all in one place.
                 </p>
 
                 <div className="hero-actions">
                     <button className="btn-primary" onClick={() => setShowAuth(true)}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
-                        Try CortexAI — It's Free
+                        Start Learning Free
                     </button>
                     <button className="btn-secondary" onClick={() => alert('Download app coming soon! 🚀')}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
@@ -81,7 +82,7 @@ export default function LandingPage() {
                     <div className="social-div" />
                     <div className="social-stat"><span className="social-num">50K+</span><span className="social-label">Questions Answered</span></div>
                     <div className="social-div" />
-                    <div className="social-stat"><span className="social-num">8</span><span className="social-label">CS Domains</span></div>
+                    <div className="social-stat"><span className="social-num">A+</span><span className="social-label">Rated by Students</span></div>
                 </div>
             </section>
 
@@ -89,15 +90,15 @@ export default function LandingPage() {
             <section className="section">
                 <div className="section-inner">
                     <div className="section-label">The Problem</div>
-                    <h2 className="section-title">Cybersecurity education is broken</h2>
+                    <h2 className="section-title">Learning is harder than it should be</h2>
                     <p className="section-sub">We were students too. We know exactly how painful it is.</p>
 
                     <div className="problems-grid">
                         {[
-                            { icon: '📚', title: 'Textbooks are impossible', desc: 'Dense, outdated, and written for professionals — not students trying to pass an exam or land their first job.' },
-                            { icon: '🔍', title: 'Google gives 50 conflicting answers', desc: 'You search "how does SQL injection work" and get 40 different blog posts, none of which actually explain it clearly.' },
-                            { icon: '⏰', title: 'Exam season panic', desc: 'You have a DCN paper in 12 hours and no structured way to revise. No summaries, no key points, no exam-focused content.' },
-                            { icon: '🧩', title: 'Concepts feel disconnected', desc: 'You learn ARP spoofing but never understand where it fits in the bigger picture of network security.' },
+                            { icon: '📚', title: 'Textbooks are overwhelming', desc: 'Dense, outdated, and written for experts — not students trying to pass an exam or understand a concept for the first time.' },
+                            { icon: '🔍', title: 'Google gives conflicting answers', desc: 'You search a topic and get hundreds of blog posts, tutorials, and videos — none of which actually explain it clearly.' },
+                            { icon: '⏰', title: 'Exam season is stressful', desc: 'You have an exam in a few days and no structured way to revise. No summaries, no key points, no focused study material.' },
+                            { icon: '🧩', title: 'Concepts feel disconnected', desc: 'You learn something but never understand where it fits in the bigger picture. Pieces never quite come together.' },
                         ].map((p, i) => (
                             <div key={i} className="problem-card" style={{ animationDelay: `${i * 0.08}s` }}>
                                 <div className="problem-icon">{p.icon}</div>
@@ -113,17 +114,17 @@ export default function LandingPage() {
             <section className="section section-alt">
                 <div className="section-inner">
                     <div className="section-label">The Solution</div>
-                    <h2 className="section-title">Your personal cybersecurity tutor</h2>
+                    <h2 className="section-title">Learn anything. Understand everything.</h2>
                     <p className="section-sub">CortexAI doesn't just answer questions — it teaches.</p>
 
                     <div className="features-grid">
                         {[
-                            { icon: '🎯', color: '#7c6af7', title: 'Exam-Ready Explanations', desc: 'Every answer includes a definition, step-by-step breakdown, key points for quick recall, and an exam summary. Built for revision.' },
-                            { icon: '💻', color: '#4f8ef7', title: 'Programming Help', desc: 'From C++ OOP to Python scripting, get clean code examples with explanations tailored to your level.' },
-                            { icon: '🔐', color: '#10b981', title: '8 Cybersecurity Domains', desc: 'OS security, networking, malware analysis, cryptography, web security, forensics, reverse engineering, and CTF — all covered.' },
+                            { icon: '🎯', color: '#7c6af7', title: 'Exam-Ready Explanations', desc: 'Every answer includes definitions, step-by-step breakdowns, key points, and exam summaries. Built for revision.' },
+                            { icon: '💻', color: '#4f8ef7', title: 'Programming Help', desc: 'From C++ to Python, get clear code examples with explanations tailored to your level.' },
+                            { icon: '🔬', color: '#10b981', title: 'Any Subject', desc: 'Computer Science, Mathematics, Physics, and more. Learn any topic with structured explanations.' },
                             { icon: '🧠', color: '#f59e0b', title: 'Smart AI Routing', desc: 'Your query is automatically routed to the right AI model. Simple questions get instant answers. Complex topics get deep dives.' },
                             { icon: '📖', color: '#ec4899', title: 'Note Generation', desc: 'Ask CortexAI to generate study notes on any topic. Structured, concise, and exam-focused — ready to revise from.' },
-                            { icon: '🛠', color: '#22d3ee', title: 'Security Tools Guide', desc: 'Learn how to use Nmap, Metasploit, Burp Suite, sqlmap and more — with real command examples and use cases.' },
+                            { icon: '🔍', color: '#22d3ee', title: 'Research Helper', desc: 'Understand complex concepts, explore topics deeply, and get clear explanations for any subject.' },
                         ].map((f, i) => (
                             <div key={i} className="feature-card" style={{ animationDelay: `${i * 0.07}s` }}>
                                 <div className="feature-icon" style={{ background: `${f.color}18` }}>{f.icon}</div>
@@ -143,7 +144,7 @@ export default function LandingPage() {
                         <div className="orb" />
                     </div>
                     <h2 className="cta-title">Ready to learn smarter?</h2>
-                    <p className="cta-sub">Join thousands of CS students who use CortexAI to study better, prepare faster, and understand deeper.</p>
+                    <p className="cta-sub">Join thousands of students who use CortexAI to study better, prepare faster, and understand deeper.</p>
                     <div className="cta-btns">
                         <button className="btn-primary" onClick={() => setShowAuth(true)}>
                             Start Learning Free →
@@ -157,8 +158,8 @@ export default function LandingPage() {
             <footer className="footer">
                 <div className="footer-inner">
                     <div className="footer-logo">
-                        <div className="nav-logo-icon" style={{ width: 24, height: 24, fontSize: 12 }}>⚡</div>
-                        <span style={{ fontWeight: 700, color: '#f0f0f5' }}>CortexAI</span>
+                        <Image src="/cortex-icon.png" alt="CortexAI" width={18} height={18} style={{ opacity: 0.9 }} />
+                        <span style={{ fontWeight: 700, color: '#f0f0f5', opacity: 0.9 }}>CortexAI</span>
                     </div>
                     <div className="footer-links">
                         <a href="/about">About</a>
@@ -176,7 +177,7 @@ export default function LandingPage() {
                     <div className="modal-backdrop" onClick={() => setShowAuth(false)} />
                     <div className="auth-modal">
                         <button className="modal-close" onClick={() => setShowAuth(false)}>✕</button>
-                        <div className="auth-orb">⚡</div>
+                        <Image src="/cortex-icon.png" alt="CortexAI" width={48} height={48} className="auth-orb" />
                         <h3 className="auth-title">Join CortexAI</h3>
                         <p className="auth-sub">Free for students. Start learning in seconds.</p>
                         <SignUpButton mode="modal">
@@ -215,7 +216,7 @@ export default function LandingPage() {
         .nav-scrolled { background: rgba(12,12,15,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.06); }
         .nav-inner { max-width: 1100px; margin: 0 auto; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
         .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .nav-logo-icon { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg,#7c6af7,#4f8ef7); display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 0 16px rgba(124,106,247,0.4); }
+
         .nav-logo-text { font-size: 18px; font-weight: 700; color: #f0f0f5; }
         .nav-links { display: flex; align-items: center; gap: 6px; }
         .nav-link { background: none; border: none; font-family: inherit; font-size: 14px; color: #8a8a9a; cursor: pointer; padding: 7px 14px; border-radius: 8px; transition: all .15s; text-decoration: none; display: inline-flex; }
@@ -293,7 +294,7 @@ export default function LandingPage() {
         .auth-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 201; background: #16161e; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.6); }
         .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; color: #44445a; font-size: 16px; cursor: pointer; padding: 6px; border-radius: 6px; transition: all .14s; }
         .modal-close:hover { background: rgba(255,255,255,0.06); color: #8a8a9a; }
-        .auth-orb { font-size: 36px; margin-bottom: 16px; }
+        .auth-orb { width: 48px; height: 48px; border-radius: 50%; margin-bottom: 16px; }
         .auth-title { font-size: 22px; font-weight: 700; color: #f0f0f5; margin-bottom: 8px; }
         .auth-sub { font-size: 14px; color: #8a8a9a; margin-bottom: 28px; line-height: 1.6; }
         .auth-btn-primary { display: block; width: 100%; padding: 12px; border-radius: 10px; border: none; background: linear-gradient(135deg,#7c6af7,#4f8ef7); color: #fff; font-family: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: all .2s; box-shadow: 0 0 20px rgba(124,106,247,.35); margin-bottom: 16px; }
