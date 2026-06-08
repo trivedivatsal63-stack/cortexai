@@ -13,7 +13,6 @@
     "@clerk/backend": "^3.4.7",
     "@clerk/nextjs": "^7.3.3",
     "@clerk/shared": "^4.10.2",
-    "@next/swc-win32-x64-msvc": "^16.1.7",
     "@supabase/supabase-js": "^2.99.2",
     "@tavily/core": "^0.7.3",
     "framer-motion": "^12.38.0",
@@ -28,6 +27,9 @@
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.1",
     "sharp": "^0.34.5"
+  },
+  "optionalDependencies": {
+    "@next/swc-win32-x64-msvc": "^16.1.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
