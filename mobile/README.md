@@ -1,4 +1,4 @@
-# AETHER Mobile App
+# SENTINEL Mobile App
 
 Premium AI learning platform for CS students. React Native + Expo.
 
@@ -33,7 +33,7 @@ npx expo start --ios
 ## File Structure
 
 ```
-AETHER-mobile/
+SENTINEL-mobile/
 ├── app/
 │   ├── _layout.tsx          # Root layout
 │   ├── (tabs)/

@@ -13,7 +13,7 @@ const TEAM = [
 const TIMELINE = [
   { year: '2024', title: 'The idea', desc: 'No tool existed that could explain any subject clearly and also serve as a security operations assistant.' },
   { year: 'Q1 2025', title: 'Learning prototype built', desc: 'AI tutoring chatbot that could answer questions on any topic. Shared with 20 classmates.' },
-  { year: 'Q2 2025', title: 'AETHER v1 launched', desc: 'Full learning platform with auth, chat history, multiple subjects, and smart AI routing.' },
+  { year: 'Q2 2025', title: 'SENTINEL v1 launched', desc: 'Full learning platform with auth, chat history, multiple subjects, and smart AI routing.' },
   { year: 'Q3 2025', title: 'SOC Suite added', desc: 'Built-in SOC tools — alert triage, threat intel, IR, forensics — transforming it into a dual-purpose platform.' },
   { year: 'Today', title: 'Growing fast', desc: 'Used by students to learn anything and by SOC teams to respond faster. Continuously improving.' },
 ]

@@ -164,6 +164,104 @@ export default function LandingPage() {
       </section>
 
       <section className="relative px-6 pb-32" style={{ zIndex: 1 }}>
+        <motion.div className="max-w-3xl mx-auto"
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}>
+          <div className="text-center mb-10">
+            <p className="text-xs tracking-widest uppercase mb-2"
+              style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+              See It In Action
+            </p>
+            <h2 className="text-2xl font-medium" style={{ color: 'var(--text-primary)' }}>
+              From question to query in seconds
+            </h2>
+            <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+              Ask anything. Get expert answers. Generate Splunk queries — all in natural language.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border overflow-hidden"
+            style={{ background: '#1a1a18', borderColor: 'rgba(255,255,255,0.08)' }}>
+            {/* Chat header */}
+            <div className="flex items-center gap-2.5 px-5 h-12 border-b" style={{ background: '#222220', borderColor: 'rgba(255,255,255,0.06)' }}>
+              <div className="flex gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#e5554d' }} />
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#e5bf4d' }} />
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#4dc96b' }} />
+              </div>
+              <div className="flex-1 text-center">
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-mono)' }}>
+                  SENTINEL — Security Agent
+                </span>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="px-5 py-6 space-y-5">
+              {/* User message 1 */}
+              <div className="flex justify-end">
+                <div className="max-w-[80%] px-4 py-3 text-sm leading-relaxed rounded-2xl"
+                  style={{ background: '#7c6af7', color: '#fff', borderRadius: '18px 18px 4px 18px' }}>
+                  Explain how a buffer overflow attack works
+                </div>
+              </div>
+
+              {/* AI message 1 */}
+              <div className="flex gap-3">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium flex-shrink-0 mt-0.5"
+                  style={{ background: '#26215c', color: '#cbc8f6' }}>A</div>
+                <div className="flex-1 min-w-0">
+                  <div className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[11px] font-medium border mb-2"
+                    style={{ background: '#faeeda', color: '#854f0b', borderColor: '#fac775' }}>
+                    <Shield size={10} /> Security
+                  </div>
+                  <div className="text-sm leading-relaxed" style={{ color: '#e8e6df' }}>
+                    A buffer overflow occurs when a program writes more data to a fixed-length buffer than it can hold, overwriting adjacent memory. This corrupts the stack — specifically the return address and other local variables. An attacker can craft input that overwrites the return address to point to malicious shellcode placed elsewhere in memory. When the function returns, execution jumps to the shellcode instead of the intended code path. Defenses include stack canaries, ASLR, and NX bits.
+                  </div>
+                </div>
+              </div>
+
+              {/* User message 2 */}
+              <div className="flex justify-end">
+                <div className="max-w-[80%] px-4 py-3 text-sm leading-relaxed rounded-2xl"
+                  style={{ background: '#7c6af7', color: '#fff', borderRadius: '18px 18px 4px 18px' }}>
+                  Generate a Splunk query to detect this
+                </div>
+              </div>
+
+              {/* AI message 2 */}
+              <div className="flex gap-3">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium flex-shrink-0 mt-0.5"
+                  style={{ background: '#26215c', color: '#cbc8f6' }}>A</div>
+                <div className="flex-1 min-w-0">
+                  <div className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[11px] font-medium border mb-2"
+                    style={{ background: '#faeeda', color: '#854f0b', borderColor: '#fac775' }}>
+                    <Shield size={10} /> Security
+                  </div>
+                  <div className="text-sm leading-relaxed" style={{ color: '#e8e6df' }}>
+                    <div style={{ background: '#2c2c2a', borderRadius: 8, padding: '12px 14px', fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.6, color: '#c5e0b4', overflowX: 'auto', whiteSpace: 'pre' }}>
+{`index=windows EventCode=* OR EventID=*
+  (source="WinEventLog:Security" OR source="WinEventLog:Application")
+  | search (Message="*0xc0000005*" OR Message="*STATUS_ACCESS_VIOLATION*")
+  | search (Message="*stack*" OR Message="*buffer*" OR Message="*heap*")
+  | eval alert_severity=if(match(Message,"shellcode|exploit|return.*overwrite|SEH"),"HIGH","MEDIUM")
+  | table _time, host, EventCode, user, alert_severity, Message
+  | sort - _time`}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-8">
+            <a href="/chat" className="btn-primary h-10 px-7 text-sm inline-flex items-center gap-2">
+              Try it yourself <span style={{ fontSize: 16 }}>→</span>
+            </a>
+          </div>
+        </motion.div>
+      </section>
+
+      <section className="relative px-6 pb-32" style={{ zIndex: 1 }}>
         <motion.div className="max-w-4xl mx-auto rounded-2xl border p-10 md:p-14 text-center"
           style={{ background: 'var(--bg-primary)', borderColor: 'var(--border)' }}
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}

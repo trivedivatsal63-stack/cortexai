@@ -7,7 +7,7 @@ import {
 
 export async function POST(req: Request) {
   try {
-    const { query, agent } = await req.json()
+    const { query, agent, forceSearch } = await req.json()
 
     if (!query || !agent) {
       return NextResponse.json({ sources: [] })
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
     const agentType = agent as 'learning' | 'research' | 'security'
 
-    if (!requiresLiveData(query, agentType)) {
+    if (!requiresLiveData(query, agentType, forceSearch === true)) {
       return NextResponse.json({ sources: [] })
     }
 

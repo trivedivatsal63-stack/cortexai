@@ -5,7 +5,7 @@ type AnswerType = "short" | "detailed";
 interface ModelConfig {
     id: string;
     provider: "groq";
-    role: "fast" | "balanced" | "reasoning";
+    role: "fast" | "balanced" | "reasoning" | "long";
     maxTokens: number;
     description: string;
 }
@@ -43,22 +43,30 @@ const MODELS: Record<string, ModelConfig> = {
         id: "meta-llama/llama-4-scout-17b-16e-instruct",
         provider: "groq",
         role: "balanced",
-        maxTokens: 1400,
+        maxTokens: 4096,
         description: "Medium complexity, general purpose — Llama 4 Scout",
     },
     reasoning: {
         id: "qwen/qwen3-32b",
         provider: "groq",
         role: "reasoning",
-        maxTokens: 2000,
+        maxTokens: 4096,
         description: "Complex reasoning, research, deep analysis — Qwen 3 32B",
+    },
+    long: {
+        id: "llama-3.3-70b-versatile",
+        provider: "groq",
+        role: "long",
+        maxTokens: 4096,
+        description: "Long-form responses, learning, research — Llama 3.3 70B",
     },
 };
 
 const FALLBACK_CHAIN: Record<string, string[]> = {
     "llama-3.1-8b-instant": ["meta-llama/llama-4-scout-17b-16e-instruct"],
-    "meta-llama/llama-4-scout-17b-16e-instruct": ["qwen/qwen3-32b", "llama-3.1-8b-instant"],
-    "qwen/qwen3-32b": ["meta-llama/llama-4-scout-17b-16e-instruct", "llama-3.1-8b-instant"],
+    "meta-llama/llama-4-scout-17b-16e-instruct": ["llama-3.3-70b-versatile", "qwen/qwen3-32b", "llama-3.1-8b-instant"],
+    "qwen/qwen3-32b": ["llama-3.3-70b-versatile", "meta-llama/llama-4-scout-17b-16e-instruct", "llama-3.1-8b-instant"],
+    "llama-3.3-70b-versatile": ["qwen/qwen3-32b", "meta-llama/llama-4-scout-17b-16e-instruct", "llama-3.1-8b-instant"],
 };
 
 const SIMPLE_SIGNALS = [
@@ -147,6 +155,14 @@ export function routeToModel(ctx: QueryContext): RouteDecision {
             reasoning: `Exam mode → ${MODELS.fast.id}`,
             confidence,
         };
+    } else if ((ctx.mode === 'learning' || ctx.mode === 'research') && complexity !== 'simple') {
+        decision = {
+            model: MODELS.long.id,
+            maxTokens: MODELS.long.maxTokens,
+            provider: "groq",
+            reasoning: `${ctx.mode} medium+ → ${MODELS.long.id}`,
+            confidence,
+        };
     } else if (ctx.mode === "research" && complexity === "complex") {
         decision = {
             model: MODELS.reasoning.id,
@@ -195,6 +211,13 @@ export function routeToModel(ctx: QueryContext): RouteDecision {
             reasoning: `Simple → ${MODELS.fast.id}`,
             confidence,
         };
+    }
+
+    // Domain-specific max_tokens: Learning/Research 4096, Security 2048
+    if (ctx.mode === 'learning' || ctx.mode === 'research') {
+        decision.maxTokens = Math.min(decision.maxTokens, 4096);
+    } else if (ctx.mode === 'cybersecurity') {
+        decision.maxTokens = Math.min(decision.maxTokens, 2048);
     }
 
     routingHistory.push({

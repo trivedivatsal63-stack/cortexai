@@ -76,7 +76,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <div className="h-px" style={{ background: 'var(--border)' }} />
 
                     <button onClick={handleSignOut} className="btn-destructive w-full justify-center">
-                        Sign out of AETHER
+                        Sign out of SENTINEL
                     </button>
                 </div>
             </div>

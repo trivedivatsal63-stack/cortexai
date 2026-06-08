@@ -58,6 +58,12 @@ export function LimitReachedModal({ usage, onDismiss }: Props) {
                         </a>
                     )}
 
+                    <a href="mailto:?subject=SENTINEL%20Daily%20Limit%20Reset&body=Please%20notify%20me%20when%20my%20SENTINEL%20daily%20query%20limit%20resets."
+                        className="text-xs underline"
+                        style={{ color: 'var(--text-tertiary)' }}>
+                        Get notified when it resets
+                    </a>
+
                     <button onClick={onDismiss} className="text-xs underline btn-ghost"
                         style={{ color: 'var(--text-tertiary)' }}>
                         I&apos;ll wait — view my history

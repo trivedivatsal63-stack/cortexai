@@ -92,38 +92,24 @@ export async function incrementUsage(userId: string): Promise<void> {
 
     console.log(`[usage-tracker] incrementing for user=${userId} date=${today}`)
 
-    const { error } = await getSupabase()
+    const { data: existing } = await getSupabase()
         .from('usage_logs')
-        .upsert(
-            { 
-                user_id: userId, 
-                date: today, 
-                query_count: 1, 
-                tier: tier,
-                created_at: new Date().toISOString()
-            },
-            { onConflict: 'user_id,date' }
-        )
-
-    if (error) {
-        console.error('[usage-tracker] upsert failed, trying manual increment:', error)
-        const { data: existing } = await getSupabase()
+        .select('query_count')
+        .eq('user_id', userId)
+        .eq('date', today)
+        .maybeSingle()
+    
+    if (existing) {
+        const { error } = await getSupabase()
             .from('usage_logs')
-            .select('query_count')
+            .update({ query_count: existing.query_count + 1 })
             .eq('user_id', userId)
             .eq('date', today)
-            .maybeSingle()
-        
-        if (existing) {
-            await getSupabase()
-                .from('usage_logs')
-                .update({ query_count: (existing.query_count || 0) + 1 })
-                .eq('user_id', userId)
-                .eq('date', today)
-        } else {
-            await getSupabase()
-                .from('usage_logs')
-                .insert({ user_id: userId, date: today, query_count: 1, tier: tier })
-        }
+        if (error) console.error('[usage-tracker] increment update failed:', error)
+    } else {
+        const { error } = await getSupabase()
+            .from('usage_logs')
+            .insert({ user_id: userId, date: today, query_count: 1, tier: tier, created_at: new Date().toISOString() })
+        if (error) console.error('[usage-tracker] increment insert failed:', error)
     }
 }

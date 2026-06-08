@@ -10,7 +10,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'AETHER — AI Learning Companion',
+  title: 'SENTINEL — AI Learning & SOC Platform',
   description: 'Learn faster with AI-powered tutoring, research, and security agents.',
   icons: { icon: '/aether-icon.png' },
 }

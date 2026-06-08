@@ -36,7 +36,7 @@ export default function PremiumPage() {
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2.5 no-underline">
             <div className="w-7 h-7 rounded-lg" style={{ background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-fg)', fontSize: '10px', fontWeight: 500 }}>A</div>
-            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>AETHER</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>SENTINEL</span>
           </a>
           <div className="flex items-center gap-2.5">
             <a href="/about" className="btn-ghost text-sm">About</a>

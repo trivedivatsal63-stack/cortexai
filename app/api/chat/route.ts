@@ -46,6 +46,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const messages = body.messages;
     const agent = body.agent;
+    const forceSearch = body.forceSearch === true;
 
     console.log('[Chat API] Agent:', agent, 'Messages count:', messages?.length);
 
@@ -76,7 +77,7 @@ export async function POST(req: Request) {
 
     const agentType = agent as 'learning' | 'research' | 'security'
     try {
-      if (requiresLiveData(lastUserMessage, agentType)) {
+      if (requiresLiveData(lastUserMessage, agentType, forceSearch)) {
         const [tavilyResults, threatIntelResults] = await Promise.all([
           fetchSearchResults(lastUserMessage),
           fetchThreatIntelResults(lastUserMessage, agentType),
@@ -185,6 +186,15 @@ export async function POST(req: Request) {
         const newUsed = usage.used + 1;
         const newRemaining = Math.max(0, usage.limit - newUsed);
         const newPct = Math.min(100, Math.round((newUsed / usage.limit) * 100));
+
+        let cutOff = false
+        const trimmed = reply.trim()
+        const endsWithPunct = /[.!?]\s*$/.test(trimmed)
+        const openFences = (trimmed.match(/```/g) || []).length
+        if (!endsWithPunct || openFences % 2 !== 0) {
+          cutOff = true
+          reply += '\n\n*... Response was cut off — try asking for a specific section *'
+        }
 
         console.log('[Chat API] Success! Returning reply...');
         return NextResponse.json({

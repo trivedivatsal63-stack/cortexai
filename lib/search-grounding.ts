@@ -25,13 +25,30 @@ const TIMELESS_SIGNALS = [
   'example of', 'syntax', 'algorithm', 'history of', 'concept',
 ]
 
+const SECURITY_KEYWORDS = [
+  'cve', 'cve-', 'malware', 'ransomware', 'trojan', 'virus',
+  'exploit', 'vulnerability', 'vulnerabilities', 'zero-day', 'zeroday',
+  'threat actor', 'apt', 'apt28', 'apt29', 'lazarus', 'fancy bear',
+  'ioc', 'indicator of compromise', 'indicators of compromise',
+  'phishing', 'breach', 'data breach', 'cyber attack', 'cyberattack',
+  'ddos', 'botnet', 'backdoor', 'payload', 'shellcode',
+  'cve-2024', 'cve-2025', 'cve-2026',
+]
+
 export function requiresLiveData(
   query: string,
-  agent: 'learning' | 'research' | 'security'
+  agent: 'learning' | 'research' | 'security',
+  forceSearch = false
 ): boolean {
+  if (forceSearch) return true
   if (agent === 'learning') return false
 
   const lower = query.toLowerCase()
+
+  if (agent === 'security') {
+    const hasSecurityKeyword = SECURITY_KEYWORDS.some(kw => lower.includes(kw))
+    if (hasSecurityKeyword) return true
+  }
 
   const timelessScore = TIMELESS_SIGNALS.filter(s => lower.includes(s)).length
   const recencyScore = RECENCY_SIGNALS.filter(s => lower.includes(s)).length

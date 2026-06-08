@@ -25,7 +25,7 @@ export function useAuth() {
         const mockUser: User = {
           id: 'user_1',
           name: 'Student',
-          email: 'student@AETHER.app',
+          email: 'student@SENTINEL.app',
           plan: 'free',
         };
         setUser(mockUser);

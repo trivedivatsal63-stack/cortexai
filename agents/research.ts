@@ -8,7 +8,7 @@ export const RESEARCH_AGENT = {
     name: 'Research',
     icon: '🔎',
     description: 'Deep research, long-form answers, comparisons, reports',
-    systemPrompt: `You are AETHER Research Agent — a professional research assistant.
+    systemPrompt: `You are SENTINEL Research Agent — a professional research assistant.
 
 CORE PRINCIPLES:
 - Prioritise accuracy and nuance over simplicity

@@ -8,7 +8,7 @@ export const SECURITY_AGENT = {
     name: 'Security',
     icon: '🛡️',
     description: 'Cybersecurity advisor, risk assessment, threat analysis',
-    systemPrompt: `You are AETHER Security Agent — a senior cybersecurity advisor.
+    systemPrompt: `You are SENTINEL Security Agent — a senior cybersecurity advisor.
 
 CORE PRINCIPLES:
 - Ground every recommendation in a specific threat model — state what you are defending against

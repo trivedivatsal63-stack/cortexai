@@ -20,7 +20,7 @@ export default function SettingsPage() {
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2.5 no-underline">
             <div className="w-7 h-7 rounded-lg" style={{ background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-fg)', fontSize: '10px', fontWeight: 500 }}>A</div>
-            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>AETHER</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>SENTINEL</span>
           </a>
           <div className="flex items-center gap-2.5">
             <a href="/chat" className="btn-primary text-sm">Open App →</a>
@@ -88,7 +88,7 @@ export default function SettingsPage() {
               <div style={{ border: '1px solid var(--danger)', borderRadius: 'var(--radius-md)', padding: 16 }}>
                 <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Sign out of your account on this device.</p>
                 <button onClick={handleSignOut} className="btn-danger text-sm">
-                  Sign out of AETHER
+                  Sign out of SENTINEL
                 </button>
               </div>
             </motion.div>

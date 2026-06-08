@@ -1,10 +1,11 @@
 'use client'
-import { memo, useState, useEffect } from 'react'
+import { memo, useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
-import { BookOpen, Search, Shield, Plus, MessageSquare, Settings, ChevronLeft, ChevronRight } from 'lucide-react'
+import { BookOpen, Search, Shield, Plus, MessageSquare, Settings, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import type { Agent } from '@/agents'
-import { useUsage } from '@/hooks/useUsage'
+import type { UsageStatus } from '@/lib/usage-tracker'
+import { LimitReachedModal } from '@/components/LimitReachedModal'
 
 type DBSession = { id: string; title: string; created_at: string; updated_at: string }
 
@@ -21,6 +22,8 @@ interface SidebarProps {
   onToggleCollapse: () => void
   sidebarOpen?: boolean
   onCloseMobile?: () => void
+  usage: UsageStatus | null
+  usageLoading: boolean
 }
 
 const AGENTS: { id: Agent; icon: React.ReactNode; label: string }[] = [
@@ -46,19 +49,39 @@ export const Sidebar = memo(function Sidebar({
   sessions, sessionsLoading, activeId, activeAgent, collapsed,
   onNewChat, onSelectSession, onSelectAgent, onDeleteSession,
   onToggleCollapse,
-  sidebarOpen, onCloseMobile,
+  sidebarOpen, onCloseMobile, usage, usageLoading,
 }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user } = useUser()
-  const { usage, loading: usageLoading } = useUsage()
   const grouped = groupByDate(sessions)
   const isChat = pathname === '/chat'
 
   const used = usage?.used ?? 0
   const limit = usage?.limit ?? 100
   const percentUsed = limit > 0 ? (used / limit) * 100 : 0
-  const barColor = percentUsed >= 80 ? 'var(--danger)' : 'var(--accent)'
+  const barColor = used >= 49 ? 'var(--danger)' : used >= 40 ? '#eab308' : 'var(--accent)'
+
+  const [showToast, setShowToast] = useState(false)
+  const [showLimitModal, setShowLimitModal] = useState(false)
+  const toastShownRef = useRef(false)
+  const modalShownRef = useRef(false)
+
+  useEffect(() => {
+    if (!usageLoading && usage && used === 45 && !toastShownRef.current) {
+      toastShownRef.current = true
+      setShowToast(true)
+      const timer = setTimeout(() => setShowToast(false), 6000)
+      return () => clearTimeout(timer)
+    }
+  }, [usage, usageLoading, used])
+
+  useEffect(() => {
+    if (!usageLoading && usage && used >= 50 && !modalShownRef.current) {
+      modalShownRef.current = true
+      setShowLimitModal(true)
+    }
+  }, [usage, usageLoading, used])
 
   const sidebarContent = (
     <div className="h-full flex flex-col overflow-hidden transition-all duration-200" style={{
@@ -69,7 +92,7 @@ export const Sidebar = memo(function Sidebar({
       <div className={collapsed ? 'flex items-center justify-between h-14 px-3 flex-shrink-0' : 'flex items-center justify-between h-14 px-5 flex-shrink-0'}>
         <div className="flex items-center gap-2.5">
           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--accent)' }} />
-          {!collapsed && <span className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>AETHER</span>}
+          {!collapsed && <span className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>SENTINEL</span>}
         </div>
         <button onClick={onToggleCollapse}
           className="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] transition-colors flex-shrink-0"
@@ -192,6 +215,24 @@ export const Sidebar = memo(function Sidebar({
         </div>
       )}
 
+      {/* Toast notification */}
+      {showToast && (
+        <div className="mx-4 mb-2 flex-shrink-0">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs border"
+            style={{
+              background: 'rgba(234,179,8,0.08)',
+              borderColor: 'rgba(234,179,8,0.25)',
+              color: 'var(--text-primary)',
+            }}
+          >
+            <span className="flex-1">You have 5 queries left today. Resets at midnight.</span>
+            <button onClick={() => setShowToast(false)} style={{ color: 'var(--text-tertiary)' }}>
+              <X size={12} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Bottom user */}
       <div className={collapsed ? 'flex flex-col items-center gap-1 px-2 py-3 border-t flex-shrink-0 mt-auto' : 'flex items-center gap-2.5 px-4 py-3 border-t flex-shrink-0 mt-auto'} style={{ borderColor: 'var(--border)' }}>
         <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0"
@@ -217,5 +258,12 @@ export const Sidebar = memo(function Sidebar({
     </div>
   )
 
-  return <>{sidebarContent}</>
+  return (
+    <>
+      {sidebarContent}
+      {showLimitModal && usage && (
+        <LimitReachedModal usage={usage} onDismiss={() => setShowLimitModal(false)} />
+      )}
+    </>
+  )
 })

@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SENTINEL
+
+AI-powered learning companion and SOC platform for CS students and security analysts.
+
+## What is SENTINEL
+
+SENTINEL is a dual-purpose platform that combines an intelligent AI tutor with a security operations center (SOC) suite. Students use it to learn any subject through conversational AI, while security professionals leverage built-in SOC tools for alert triage, threat intelligence, incident response, and forensics. A smart model router selects the best AI for each query — fast for simple questions, deep for complex analysis.
+
+## Features
+
+- **Learning Agent** — AI tutoring across all subjects with support for exam mode, notes, and code examples
+- **Research Agent** — Deep research with live web search grounding via Tavily
+- **Security Agent** — Cybersecurity advisory with threat intelligence enrichment
+- **SOC Modules**: Log analysis, Kali Linux mentoring, bug bounty guidance, malware analysis, network security, digital forensics
+- **Blog** — Built-in blog with Markdown editing, categories, and SEO metadata
+- **User auth** — Clerk authentication with free/pro tier limits
+- **Usage tracking** — 50 queries/day free tier, 500/day pro tier
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (Turbopack)
+- **AI**: Groq SDK (LLM inference), Anthropic SDK (fallback)
+- **Database**: Supabase (PostgreSQL)
+- **Auth**: Clerk
+- **Styling**: Tailwind CSS v4
+- **Search**: Tavily API (web grounding)
+- **Mobile**: React Native + Expo (in `mobile/`)
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repo
+2. Copy `.env.local.example` to `.env.local` and fill in the values
+3. Run the Supabase schema in `supabase/blog-schema.sql`
+4. Install dependencies and start
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Key | Description |
+|-----|-------------|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (from Clerk dashboard) |
+| `CLERK_SECRET_KEY` | Clerk secret key (from Clerk dashboard) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (not anon) |
+| `GROQ_API_KEY` | Groq API key for LLM inference |
+| `TAVILY_API_KEY` | Tavily API key for web search grounding (optional) |
+| `ANTHROPIC_API_KEY` | Anthropic API key for Claude fallback (optional) |
 
-## Learn More
+## Screenshots
 
-To learn more about Next.js, take a look at the following resources:
+[Add screenshots here]
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

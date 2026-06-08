@@ -115,7 +115,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
           <View style={styles.logoRow}>
             <View style={styles.logoIcon}><Text style={{ fontSize: 14 }}>⚡</Text></View>
-            <Text style={styles.logoText}>AETHER</Text>
+            <Text style={styles.logoText}>SENTINEL</Text>
           </View>
           <TouchableOpacity
             style={styles.headerRight}
@@ -186,7 +186,7 @@ export default function HomeScreen() {
         <InputBox
           onSend={handleSend}
           disabled={!isPro && queryCount >= FREE_LIMIT}
-          placeholder={!isPro && queryCount >= FREE_LIMIT ? '🔒 Daily limit reached · Upgrade to Pro' : 'Ask AETHER anything...'}
+          placeholder={!isPro && queryCount >= FREE_LIMIT ? '🔒 Daily limit reached · Upgrade to Pro' : 'Ask SENTINEL anything...'}
           examMode={examMode}
           onToggleExamMode={() => setExamMode(e => !e)}
         />

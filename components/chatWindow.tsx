@@ -22,7 +22,7 @@ function WelcomeScreen() {
         <div className="welcome-screen">
             <div className="welcome-content">
                 <div className="welcome-icon-wrapper">
-                    <Image src="/aether-icon.png" alt="AETHER" width={56} height={56} className="welcome-icon" />
+                    <Image src="/aether-icon.png" alt="SENTINEL" width={56} height={56} className="welcome-icon" />
                 </div>
                 <h1 className="welcome-title">What would you like to know?</h1>
             </div>

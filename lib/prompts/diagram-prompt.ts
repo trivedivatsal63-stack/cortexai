@@ -2,7 +2,7 @@
 
 export function buildDiagramPrompt(query: string): string {
   return `
-You are AETHER's diagram generation engine.
+You are SENTINEL's diagram generation engine.
 
 When a diagram is appropriate, output it as a Mermaid.js code block ONLY.
 Use this exact format — no explanation before or after the diagram block:
