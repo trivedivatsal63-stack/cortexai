@@ -1,53 +1,10 @@
 'use client'
 
 import type { UsageStatus } from '@/lib/usage-tracker'
+import { AlertTriangle, Ban } from 'lucide-react'
 
 interface Props {
     usage: UsageStatus | null
-}
-
-/**
- * LimitBanner — renders above the chat input bar.
- * Invisible below 80%. Amber warning at 80–99%. Red at 100%.
- */
-export function LimitBanner({ usage }: Props) {
-    if (!usage || usage.percentUsed < 80) return null
-
-    const isExhausted = !usage.allowed
-
-    const resetCountdown = getResetCountdown(usage.resetAt)
-
-    return (
-        <div style={{
-            ...styles.banner,
-            background: isExhausted
-                ? 'rgba(239, 68, 68, 0.08)'
-                : 'rgba(245, 158, 11, 0.08)',
-            borderColor: isExhausted
-                ? 'rgba(239, 68, 68, 0.35)'
-                : 'rgba(245, 158, 11, 0.35)',
-        }}>
-            <span style={{ fontSize: 14 }}>
-                {isExhausted ? '🚫' : '⚠️'}
-            </span>
-
-            <span style={{
-                ...styles.text,
-                color: isExhausted ? '#fca5a5' : '#fcd34d',
-            }}>
-                {isExhausted
-                    ? `Query limit reached. ${resetCountdown}.`
-                    : `${usage.remaining} ${usage.remaining === 1 ? 'query' : 'queries'} remaining today. ${resetCountdown}.`
-                }
-            </span>
-
-            {usage.tier === 'free' && (
-                <a href="/pricing" style={styles.upgradeLink}>
-                    Upgrade to Pro →
-                </a>
-            )}
-        </div>
-    )
 }
 
 function getResetCountdown(resetAt: string): string {
@@ -60,32 +17,33 @@ function getResetCountdown(resetAt: string): string {
     return `Resets in ${minutes}m`
 }
 
-const styles: Record<string, React.CSSProperties> = {
-    banner: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '9px 16px',
-        borderTop: '1px solid',
-        borderBottom: '1px solid',
-        fontSize: 13,
-        flexShrink: 0,
-    },
-    text: {
-        flex: 1,
-        fontFamily: 'var(--font-mono, monospace)',
-        fontSize: 12,
-    },
-    upgradeLink: {
-        fontSize: 12,
-        fontWeight: 600,
-        color: '#a78bfa',
-        textDecoration: 'none',
-        whiteSpace: 'nowrap' as const,
-        fontFamily: 'var(--font-mono, monospace)',
-        padding: '3px 10px',
-        border: '1px solid rgba(167, 139, 250, 0.4)',
-        borderRadius: 5,
-        transition: 'all 0.15s',
-    },
+export function LimitBanner({ usage }: Props) {
+    if (!usage || usage.percentUsed < 80) return null
+
+    const isExhausted = !usage.allowed
+    const resetCountdown = getResetCountdown(usage.resetAt)
+
+    return (
+        <div className="flex items-center gap-2.5 px-4 py-2.5 text-xs border-t border-b flex-shrink-0"
+            style={{
+                background: isExhausted ? 'rgba(197,52,52,0.06)' : 'rgba(197,52,52,0.03)',
+                borderColor: isExhausted ? 'var(--danger)' : 'var(--border)',
+                color: isExhausted ? 'var(--danger)' : 'var(--text-secondary)',
+            }}
+        >
+            {isExhausted ? <Ban size={14} /> : <AlertTriangle size={14} />}
+            <span className="flex-1 font-mono text-xs">
+                {isExhausted
+                    ? `Query limit reached. ${resetCountdown}.`
+                    : `${usage.remaining} ${usage.remaining === 1 ? 'query' : 'queries'} remaining today. ${resetCountdown}.`
+                }
+            </span>
+            {usage.tier === 'free' && (
+                <a href="/pricing" className="text-xs font-medium whitespace-nowrap rounded-lg px-3 py-1 transition-colors"
+                    style={{ color: 'var(--accent)', border: '1px solid var(--accent)' }}>
+                    Upgrade to Pro →
+                </a>
+            )}
+        </div>
+    )
 }

@@ -1,6 +1,6 @@
-export { LEARNING_AGENT } from './learning';
-export { RESEARCH_AGENT } from './research';
-export { SECURITY_AGENT } from './security';
+import { LEARNING_AGENT } from './learning';
+import { RESEARCH_AGENT } from './research';
+import { SECURITY_AGENT } from './security';
 
 export type Agent = 'learning' | 'research' | 'security';
 
@@ -18,28 +18,22 @@ export const AGENTS: Record<Agent, AgentInfo> = {
         name: 'Learning',
         icon: '🧠',
         description: 'Teaching, step-by-step explanations, beginner friendly',
-        systemPrompt: '',
+        systemPrompt: LEARNING_AGENT.systemPrompt,
     },
     research: {
         id: 'research',
         name: 'Research',
         icon: '🔎',
         description: 'Deep research, long-form answers, comparisons, reports',
-        systemPrompt: '',
+        systemPrompt: RESEARCH_AGENT.systemPrompt,
     },
     security: {
         id: 'security',
         name: 'Security',
         icon: '🛡️',
         description: 'Cybersecurity advisor, risk assessment, threat analysis',
-        systemPrompt: '',
+        systemPrompt: SECURITY_AGENT.systemPrompt,
     },
 };
 
-import { LEARNING_AGENT } from './learning';
-import { RESEARCH_AGENT } from './research';
-import { SECURITY_AGENT } from './security';
-
-AGENTS.learning.systemPrompt = LEARNING_AGENT.systemPrompt;
-AGENTS.research.systemPrompt = RESEARCH_AGENT.systemPrompt;
-AGENTS.security.systemPrompt = SECURITY_AGENT.systemPrompt;
+export { LEARNING_AGENT, RESEARCH_AGENT, SECURITY_AGENT };

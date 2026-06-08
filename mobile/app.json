@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CortexAI",
-    "slug": "CortexAI",
+    "name": "AETHER",
+    "slug": "AETHER",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -10,10 +10,10 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.CortexAI.app"
+      "bundleIdentifier": "com.AETHER.app"
     },
     "android": {
-      "package": "com.CortexAI.app",
+      "package": "com.AETHER.app",
       "adaptiveIcon": {
         "backgroundColor": "#0d0d12"
       }
@@ -23,7 +23,7 @@
       "expo-secure-store",
       "expo-font"
     ],
-    "scheme": "CortexAI",
+    "scheme": "AETHER",
     "experiments": {
       "typedRoutes": true
     },

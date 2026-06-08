@@ -1,5 +1,5 @@
 {
-  "name": "CortexAI",
+  "name": "AETHER",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,14 +10,18 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",
-    "@clerk/nextjs": "^7.0.5",
+    "@clerk/backend": "^3.4.7",
+    "@clerk/nextjs": "^7.3.3",
+    "@clerk/shared": "^4.10.2",
+    "@next/swc-win32-x64-msvc": "^16.1.7",
     "@supabase/supabase-js": "^2.99.2",
-    "autoprefixer": "^10.4.27",
-    "css": "^3.0.0",
+    "@tavily/core": "^0.7.3",
+    "framer-motion": "^12.38.0",
     "groq-sdk": "^1.1.1",
     "jspdf": "^4.2.1",
+    "lucide-react": "^0.468.0",
     "mermaid": "^11.13.0",
-    "next": "16.1.7",
+    "next": "^16.1.7",
     "postcss": "^8.5.8",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -31,10 +35,9 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.7",
-    "tailwindcss": "^3.4.19",
+    "tailwindcss": "^4",
     "typescript": "^5"
   }
 }

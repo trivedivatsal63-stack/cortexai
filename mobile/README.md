@@ -1,4 +1,4 @@
-# CortexAI Mobile App
+# AETHER Mobile App
 
 Premium AI learning platform for CS students. React Native + Expo.
 
@@ -33,7 +33,7 @@ npx expo start --ios
 ## File Structure
 
 ```
-CortexAI-mobile/
+AETHER-mobile/
 ├── app/
 │   ├── _layout.tsx          # Root layout
 │   ├── (tabs)/

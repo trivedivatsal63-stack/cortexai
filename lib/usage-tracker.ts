@@ -8,7 +8,7 @@ function getSupabase() {
     )
 }
 
-export const LIMITS = { free: 10, pro: 500 } as const
+export const LIMITS = { free: 50, pro: 500 } as const
 export type Tier = keyof typeof LIMITS
 
 export interface UsageStatus {
@@ -34,50 +34,43 @@ function getNextMidnightUTC(): string {
 }
 
 async function getUserTier(userId: string): Promise<Tier> {
-    const { data } = await getSupabase()
+    const { data, error } = await getSupabase()
         .from('usage_logs')
         .select('tier')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
+
+    if (error) {
+        console.log('[usage-tracker] getUserTier no row yet, defaulting to free')
+        return 'free'
+    }
     return (data?.tier as Tier) ?? 'free'
 }
 
-// Returns how many queries the user has used TODAY
 async function getTodayCount(userId: string): Promise<number> {
     const { data, error } = await getSupabase()
         .from('usage_logs')
         .select('query_count')
         .eq('user_id', userId)
         .eq('date', getTodayUTC())
-        .single()
+        .maybeSingle()
 
-    // PGRST116 = no row yet — user hasn't sent any message today
-    if (error && error.code === 'PGRST116') return 0
     if (error) {
-        console.error('[usage-tracker] getTodayCount error:', error)
-        return 0 // fail open — never block on DB errors
+        console.log('[usage-tracker] getTodayCount no row yet:', error.code)
+        return 0
     }
     return data?.query_count ?? 0
 }
 
-/**
- * checkUsageLimit
- *
- * FIX: allowed = used < limit   (strictly less than)
- *      NOT  used <= limit
- *      NOT  used >= limit
- *
- * A user with used=10 and limit=10 is NOT allowed.
- * A user with used=9  and limit=10 IS  allowed (their 10th message).
- */
 export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
     const tier = await getUserTier(userId)
     const limit = LIMITS[tier]
     const used = await getTodayCount(userId)
 
-    // ✅ CORRECT: block only when used >= limit (they've already used all 10)
+    console.log(`[usage-tracker] userId=${userId} used=${used} limit=${limit} tier=${tier}`)
+
     const allowed = used < limit
     const remaining = Math.max(0, limit - used)
     const percentUsed = Math.min(100, Math.round((used / limit) * 100))
@@ -93,23 +86,44 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
     }
 }
 
-/**
- * incrementUsage
- *
- * FIX: call this AFTER a successful Groq response only.
- * Uses an atomic upsert so concurrent requests can't double-count.
- */
 export async function incrementUsage(userId: string): Promise<void> {
     const today = getTodayUTC()
     const tier = await getUserTier(userId)
 
-    const { error } = await getSupabase().rpc('increment_query_count', {
-        p_user_id: userId,
-        p_date: today,
-        p_tier: tier,
-    })
+    console.log(`[usage-tracker] incrementing for user=${userId} date=${today}`)
+
+    const { error } = await getSupabase()
+        .from('usage_logs')
+        .upsert(
+            { 
+                user_id: userId, 
+                date: today, 
+                query_count: 1, 
+                tier: tier,
+                created_at: new Date().toISOString()
+            },
+            { onConflict: 'user_id,date' }
+        )
 
     if (error) {
-        console.error('[usage-tracker] incrementUsage error:', error)
+        console.error('[usage-tracker] upsert failed, trying manual increment:', error)
+        const { data: existing } = await getSupabase()
+            .from('usage_logs')
+            .select('query_count')
+            .eq('user_id', userId)
+            .eq('date', today)
+            .maybeSingle()
+        
+        if (existing) {
+            await getSupabase()
+                .from('usage_logs')
+                .update({ query_count: (existing.query_count || 0) + 1 })
+                .eq('user_id', userId)
+                .eq('date', today)
+        } else {
+            await getSupabase()
+                .from('usage_logs')
+                .insert({ user_id: userId, date: today, query_count: 1, tier: tier })
+        }
     }
 }

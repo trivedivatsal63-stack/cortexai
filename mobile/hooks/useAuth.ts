@@ -25,7 +25,7 @@ export function useAuth() {
         const mockUser: User = {
           id: 'user_1',
           name: 'Student',
-          email: 'student@CortexAI.app',
+          email: 'student@AETHER.app',
           plan: 'free',
         };
         setUser(mockUser);

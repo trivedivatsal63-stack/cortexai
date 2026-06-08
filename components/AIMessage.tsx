@@ -21,7 +21,7 @@ export const AIMessage = memo(function AIMessage({ content }: { content: string 
         <>
             <div className="msg-ai-who">
                 <div className="msg-ai-dot" />
-                CortexAI
+                AETHER
             </div>
             <div className="ai-prose">
                 <ReactMarkdown

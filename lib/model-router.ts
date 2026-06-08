@@ -1,14 +1,21 @@
-// lib/model-router.ts
-
 type Complexity = "simple" | "medium" | "complex";
-type Mode = "learning" | "cybersecurity";
+type Mode = "learning" | "cybersecurity" | "research";
 type AnswerType = "short" | "detailed";
+
+interface ModelConfig {
+    id: string;
+    provider: "groq";
+    role: "fast" | "balanced" | "reasoning";
+    maxTokens: number;
+    description: string;
+}
 
 interface RouteDecision {
     model: string;
     maxTokens: number;
     provider: "groq";
     reasoning: string;
+    confidence: number;
 }
 
 interface QueryContext {
@@ -18,128 +25,187 @@ interface QueryContext {
     examMode: boolean;
 }
 
-// ─────────────────────────────
-// Complexity detection
-// ─────────────────────────────
+interface RoutingEntry {
+    query: string;
+    decision: RouteDecision;
+    timestamp: number;
+}
+
+const MODELS: Record<string, ModelConfig> = {
+    fast: {
+        id: "llama-3.1-8b-instant",
+        provider: "groq",
+        role: "fast",
+        maxTokens: 500,
+        description: "Simple queries, exam mode, high throughput",
+    },
+    balanced: {
+        id: "meta-llama/llama-4-scout-17b-16e-instruct",
+        provider: "groq",
+        role: "balanced",
+        maxTokens: 1400,
+        description: "Medium complexity, general purpose — Llama 4 Scout",
+    },
+    reasoning: {
+        id: "qwen/qwen3-32b",
+        provider: "groq",
+        role: "reasoning",
+        maxTokens: 2000,
+        description: "Complex reasoning, research, deep analysis — Qwen 3 32B",
+    },
+};
+
+const FALLBACK_CHAIN: Record<string, string[]> = {
+    "llama-3.1-8b-instant": ["meta-llama/llama-4-scout-17b-16e-instruct"],
+    "meta-llama/llama-4-scout-17b-16e-instruct": ["qwen/qwen3-32b", "llama-3.1-8b-instant"],
+    "qwen/qwen3-32b": ["meta-llama/llama-4-scout-17b-16e-instruct", "llama-3.1-8b-instant"],
+};
 
 const SIMPLE_SIGNALS = [
-    /^what is /i,
-    /^define /i,
-    /^who is /i,
-    /^full form/i,
-    /^expand/i,
+    /^what is /i, /^define /i, /^who is /i,
+    /^full form/i, /^expand/i, /^meaning of/i,
+    /^list /i, /^name /i,
 ];
 
 const COMPLEX_SIGNALS = [
-    /explain in detail/i,
-    /how does .+ work/i,
-    /compare/i,
-    /difference between/i,
-    /architecture/i,
-    /step.by.step/i,
-    /implement/i,
-    /design/i,
+    /explain in detail/i, /how does .+ work/i,
+    /compare/i, /difference between/i,
+    /architecture/i, /step.by.step/i,
+    /implement/i, /design/i, /analyze/i,
+    /why does/i, /what causes/i, /derive/i,
+    /prove/i, /theorem/i,
 ];
 
 const DIAGRAM_SIGNALS = [
-    /diagram/i,
-    /flowchart/i,
-    /draw/i,
-    /visual/i,
-    /architecture/i,
+    /diagram/i, /flowchart/i, /draw/i,
+    /visual/i, /architecture/i, /graph/i,
+    /tree/i, /network/i,
 ];
 
 function detectComplexity(query: string): Complexity {
     const words = query.split(/\s+/).length;
+    if (words <= 4) return "simple";
+    if (words >= 20) return "complex";
 
-    if (words <= 5) return "simple";
-    if (words >= 18) return "complex";
+    const simpleScore = SIMPLE_SIGNALS.filter(p => p.test(query)).length;
+    const complexScore = COMPLEX_SIGNALS.filter(p => p.test(query)).length;
 
-    if (SIMPLE_SIGNALS.some(p => p.test(query))) return "simple";
-    if (COMPLEX_SIGNALS.some(p => p.test(query))) return "complex";
+    if (simpleScore > complexScore) return "simple";
+    if (complexScore > simpleScore) return "complex";
 
-    return "medium";
+    if (words >= 14) return "complex";
+    if (words >= 8) return "medium";
+    return "simple";
+}
+
+function calculateConfidence(ctx: QueryContext, complexity: Complexity): number {
+    let confidence = 0.5;
+    const wordCount = ctx.query.split(/\s+/).length;
+
+    confidence += Math.min(wordCount / 50, 0.2);
+
+    if (SIMPLE_SIGNALS.some(p => p.test(ctx.query))) confidence += 0.1;
+    if (COMPLEX_SIGNALS.some(p => p.test(ctx.query))) confidence += 0.15;
+    if (DIAGRAM_SIGNALS.some(p => p.test(ctx.query))) confidence += 0.1;
+
+    if (ctx.examMode) confidence += 0.1;
+
+    return Math.min(confidence, 1.0);
 }
 
 export function detectDiagramNeeded(query: string): boolean {
     return DIAGRAM_SIGNALS.some(p => p.test(query));
 }
 
-// ─────────────────────────────
-// Model constants
-// ─────────────────────────────
+export function getFallbackChain(model: string): string[] {
+    return FALLBACK_CHAIN[model] ?? [];
+}
 
-// Keep model IDs in one place so a future deprecation is a one-line change.
-const MODELS = {
-    fast: "llama-3.1-8b-instant",      // ✅ active  — simple / exam
-    balanced: "llama-3.3-70b-versatile",   // ✅ active  — medium / complex / diagrams
-    //         "llama-3.1-70b-versatile"    // ❌ decommissioned 2025-01-24
-} as const;
+const routingHistory: RoutingEntry[] = [];
+const MAX_HISTORY = 100;
 
-// ─────────────────────────────
-// Router
-// ─────────────────────────────
+export function getRoutingHistory(): RoutingEntry[] {
+    return [...routingHistory];
+}
+
+export function clearRoutingHistory(): void {
+    routingHistory.length = 0;
+}
 
 export function routeToModel(ctx: QueryContext): RouteDecision {
-
     const complexity = detectComplexity(ctx.query);
     const needsDiagram = detectDiagramNeeded(ctx.query);
+    const confidence = calculateConfidence(ctx, complexity);
 
-    // Exam mode → cheapest
+    let decision: RouteDecision;
+
     if (ctx.examMode) {
-        return {
-            model: MODELS.fast,
+        decision = {
+            model: MODELS.fast.id,
             maxTokens: ctx.answerType === "short" ? 200 : 400,
             provider: "groq",
-            reasoning: "Exam mode → 8B fast",
+            reasoning: `Exam mode → ${MODELS.fast.id}`,
+            confidence,
         };
-    }
-
-    // Cybersecurity complex → 70B
-    if (ctx.mode === "cybersecurity" && complexity === "complex") {
-        return {
-            model: MODELS.balanced,
-            maxTokens: 1600,
+    } else if (ctx.mode === "research" && complexity === "complex") {
+        decision = {
+            model: MODELS.reasoning.id,
+            maxTokens: MODELS.reasoning.maxTokens,
             provider: "groq",
-            reasoning: "Cybersecurity complex → 70B versatile",
+            reasoning: `Research + complex → ${MODELS.reasoning.id}`,
+            confidence,
         };
-    }
-
-    // Diagram → 70B
-    if (needsDiagram) {
-        return {
-            model: MODELS.balanced,
-            maxTokens: 1400,
+    } else if (ctx.mode === "cybersecurity" && complexity === "complex") {
+        decision = {
+            model: MODELS.balanced.id,
+            maxTokens: MODELS.balanced.maxTokens,
             provider: "groq",
-            reasoning: "Diagram requested → 70B versatile",
+            reasoning: `Security complex → ${MODELS.balanced.id}`,
+            confidence,
         };
-    }
-
-    // Complex → 70B
-    if (complexity === "complex") {
-        return {
-            model: MODELS.balanced,
-            maxTokens: 1400,
+    } else if (needsDiagram) {
+        decision = {
+            model: MODELS.balanced.id,
+            maxTokens: MODELS.balanced.maxTokens,
             provider: "groq",
-            reasoning: "Complex reasoning → 70B versatile",
+            reasoning: `Diagram requested → ${MODELS.balanced.id}`,
+            confidence,
         };
-    }
-
-    // Medium → 70B  (was: llama-3.1-70b-versatile — decommissioned)
-    if (complexity === "medium") {
-        return {
-            model: MODELS.balanced,
+    } else if (complexity === "complex") {
+        decision = {
+            model: MODELS.balanced.id,
+            maxTokens: MODELS.balanced.maxTokens,
+            provider: "groq",
+            reasoning: `Complex reasoning → ${MODELS.balanced.id}`,
+            confidence,
+        };
+    } else if (complexity === "medium") {
+        decision = {
+            model: MODELS.balanced.id,
             maxTokens: ctx.answerType === "detailed" ? 900 : 500,
             provider: "groq",
-            reasoning: "Medium complexity → 70B versatile",
+            reasoning: `Medium complexity → ${MODELS.balanced.id}`,
+            confidence,
+        };
+    } else {
+        decision = {
+            model: MODELS.fast.id,
+            maxTokens: ctx.answerType === "short" ? 250 : 500,
+            provider: "groq",
+            reasoning: `Simple → ${MODELS.fast.id}`,
+            confidence,
         };
     }
 
-    // Simple → 8B fast
-    return {
-        model: MODELS.fast,
-        maxTokens: ctx.answerType === "short" ? 250 : 500,
-        provider: "groq",
-        reasoning: "Simple → 8B fast",
-    };
+    routingHistory.push({
+        query: ctx.query.slice(0, 100),
+        decision,
+        timestamp: Date.now(),
+    });
+
+    if (routingHistory.length > MAX_HISTORY) {
+        routingHistory.splice(0, routingHistory.length - MAX_HISTORY);
+    }
+
+    return decision;
 }

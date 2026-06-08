@@ -1,544 +1,250 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useUser } from '@clerk/nextjs'
+import { motion } from 'framer-motion'
+import { Search, ArrowUpRight, Clock, User } from 'lucide-react'
 
 type Blog = {
-    id: string
-    slug: string
-    title: string
-    excerpt: string
-    category: string
-    read_time: string
-    created_at: string
-    author: { name: string; avatar_url: string | null } | null
+  id: string
+  slug: string
+  title: string
+  excerpt: string
+  category: string
+  read_time: string
+  created_at: string
+  author: { name: string; avatar_url: string | null } | null
 }
 
-const CATEGORIES = ['All', 'cybersecurity', 'networking', 'programming', 'os', 'general', 'tutorials']
+const CATEGORIES = ['All', 'Cybersecurity', 'Networking', 'Programming', 'OS', 'General', 'Tutorials']
 
 function formatDate(dateStr: string) {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-    })
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+const container = { animate: { transition: { staggerChildren: 0.05 } } }
+const item = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } }
+
 export default function BlogPage() {
-    const { user } = useUser()
-    const [blogs, setBlogs] = useState<Blog[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState('')
-    const [retrying, setRetrying] = useState(false)
-    const [selectedCat, setSelectedCat] = useState('All')
-    const [searchQuery, setSearchQuery] = useState('')
+  const { user } = useUser()
+  const [blogs, setBlogs] = useState<Blog[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [selectedCat, setSelectedCat] = useState('All')
+  const [searchQuery, setSearchQuery] = useState('')
 
-    const loadBlogs = () => {
-        setLoading(true)
-        setError('')
-        fetch('/api/blogs')
-            .then(r => r.json())
-            .then(d => {
-                if (d.error && d.retry) {
-                    setError('Unable to connect to database')
-                } else {
-                    setBlogs(d.blogs || [])
-                }
-            })
-            .catch(() => setError('Network error'))
-            .finally(() => {
-                setLoading(false)
-                setRetrying(false)
-            })
-    }
+  const loadBlogs = useCallback(() => {
+    setLoading(true)
+    setError('')
+    fetch('/api/blogs')
+      .then(r => r.json())
+      .then(d => {
+        if (d.error && d.retry) setError('Unable to connect to database')
+        else setBlogs(d.blogs || [])
+      })
+      .catch(() => setError('Network error'))
+      .finally(() => setLoading(false))
+  }, [])
 
-    useEffect(() => {
-        loadBlogs()
-    }, [])
+  useEffect(() => { loadBlogs() }, [loadBlogs])
 
-    const filtered = blogs.filter(b => {
-        const matchesCat = selectedCat === 'All' || b.category.toLowerCase() === selectedCat.toLowerCase()
-        const matchesSearch = !searchQuery || 
-            b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            b.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
-        return matchesCat && matchesSearch
-    })
+  const filtered = blogs.filter(b => {
+    const matchesCat = selectedCat === 'All' || b.category.toLowerCase() === selectedCat.toLowerCase()
+    const matchesSearch = !searchQuery ||
+      b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesCat && matchesSearch
+  })
 
-    return (
-        <div className="blog-root">
-            <header className="blog-header">
-                <div className="blog-header-content">
-                    <div className="blog-title-row">
-                        <div>
-                            <h1 className="blog-title">Blog & Learn</h1>
-                            <p className="blog-subtitle">Share your knowledge with the community</p>
-                        </div>
-                        {user && (
-                            <Link href="/blog/new" className="write-btn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M12 5v14M5 12h14" />
-                                </svg>
-                                Write a Post
-                            </Link>
-                        )}
-                    </div>
-                    
-                    <div className="blog-search-bar">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="11" cy="11" r="8" />
-                            <path d="M21 21l-4.35-4.35" />
-                        </svg>
-                        <input 
-                            type="text" 
-                            placeholder="Search articles..." 
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                        />
-                    </div>
+  const featured = filtered[0]
+  const rest = filtered.slice(1)
 
-                    <div className="blog-categories">
-                        {CATEGORIES.map(cat => (
-                            <button
-                                key={cat}
-                                className={`cat-btn ${selectedCat === cat ? 'cat-active' : ''}`}
-                                onClick={() => setSelectedCat(cat)}
-                            >
-                                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </header>
-
-            <main className="blog-main">
-                {loading ? (
-                    <div className="blog-loading">
-                        <div className="blog-skeleton-grid">
-                            {[1, 2, 3, 4, 5, 6].map(i => (
-                                <div key={i} className="blog-skeleton">
-                                    <div className="skel-img" />
-                                    <div className="skel-line skel-title" />
-                                    <div className="skel-line" />
-                                    <div className="skel-line skel-short" />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ) : error ? (
-                    <div className="blog-empty">
-                        <div className="empty-icon">⚠️</div>
-                        <h2>Connection Error</h2>
-                        <p>{error}. Please check your Supabase configuration.</p>
-                        <button className="empty-cta" onClick={loadBlogs}>
-                            Try Again
-                        </button>
-                    </div>
-                ) : filtered.length === 0 ? (
-                    <div className="blog-empty">
-                        <div className="empty-icon">📝</div>
-                        <h2>No articles found</h2>
-                        <p>{searchQuery ? 'Try a different search term' : 'Be the first to write an article!'}</p>
-                        {user && (
-                            <Link href="/blog/new" className="empty-cta">
-                                Write an Article
-                            </Link>
-                        )}
-                    </div>
-                ) : (
-                    <div className="blog-grid">
-                        {filtered.map(blog => (
-                            <Link key={blog.id} href={`/blog/${blog.slug}`} className="blog-card">
-                                <div className="blog-card-img">
-                                    <div className="blog-card-category">{blog.category}</div>
-                                </div>
-                                <div className="blog-card-body">
-                                    <h3 className="blog-card-title">{blog.title}</h3>
-                                    <p className="blog-card-excerpt">{blog.excerpt}</p>
-                                    <div className="blog-card-meta">
-                                        <div className="blog-card-author">
-                                            <div className="author-avatar">
-                                                {blog.author?.name?.charAt(0) || 'A'}
-                                            </div>
-                                            <span>{blog.author?.name || 'Anonymous'}</span>
-                                        </div>
-                                        <div className="blog-card-info">
-                                            <span>{formatDate(blog.created_at)}</span>
-                                            <span className="dot">•</span>
-                                            <span>{blog.read_time}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                )}
-            </main>
-
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-                
-                .blog-root {
-                    min-height: 100vh;
-                    background: #0c0c0f;
-                    color: #f0f0f5;
-                    font-family: 'Outfit', sans-serif;
-                }
-                
-                .blog-header {
-                    background: linear-gradient(180deg, rgba(124,106,247,0.08) 0%, transparent 100%);
-                    border-bottom: 1px solid rgba(255,255,255,0.06);
-                    padding: 48px 0 32px;
-                }
-                
-                .blog-header-content {
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    padding: 0 32px;
-                }
-                
-                .blog-title-row {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: flex-start;
-                    margin-bottom: 24px;
-                }
-                
-                .blog-title {
-                    font-size: 36px;
-                    font-weight: 800;
-                    letter-spacing: -0.03em;
-                    margin: 0 0 8px;
-                    background: linear-gradient(135deg, #f0f0f5 0%, #a78bfa 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                }
-                
-                .blog-subtitle {
-                    font-size: 16px;
-                    color: #8a8a9a;
-                    margin: 0;
-                }
-                
-                .write-btn {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    padding: 12px 20px;
-                    background: linear-gradient(135deg, #7c6af7 0%, #4f8ef7 100%);
-                    border: none;
-                    border-radius: 12px;
-                    color: #fff;
-                    font-family: inherit;
-                    font-size: 14px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    text-decoration: none;
-                    transition: all 0.2s;
-                    box-shadow: 0 4px 20px rgba(124,106,247,0.3);
-                }
-                
-                .write-btn:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 6px 28px rgba(124,106,247,0.4);
-                }
-                
-                .blog-search-bar {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 12px;
-                    padding: 12px 16px;
-                    margin-bottom: 20px;
-                    transition: all 0.2s;
-                }
-                
-                .blog-search-bar:focus-within {
-                    border-color: rgba(124,106,247,0.4);
-                    background: rgba(255,255,255,0.07);
-                }
-                
-                .blog-search-bar svg {
-                    color: #6b7280;
-                    flex-shrink: 0;
-                }
-                
-                .blog-search-bar input {
-                    flex: 1;
-                    background: none;
-                    border: none;
-                    outline: none;
-                    font-family: inherit;
-                    font-size: 15px;
-                    color: #f0f0f5;
-                }
-                
-                .blog-search-bar input::placeholder {
-                    color: #6b7280;
-                }
-                
-                .blog-categories {
-                    display: flex;
-                    gap: 8px;
-                    flex-wrap: wrap;
-                }
-                
-                .cat-btn {
-                    padding: 8px 16px;
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 20px;
-                    color: #8a8a9a;
-                    font-family: inherit;
-                    font-size: 13px;
-                    font-weight: 500;
-                    cursor: pointer;
-                    transition: all 0.15s;
-                }
-                
-                .cat-btn:hover {
-                    background: rgba(255,255,255,0.1);
-                    color: #f0f0f5;
-                }
-                
-                .cat-active {
-                    background: rgba(124,106,247,0.2) !important;
-                    border-color: rgba(124,106,247,0.5) !important;
-                    color: #e0d4ff !important;
-                }
-                
-                .blog-main {
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    padding: 40px 32px;
-                }
-                
-                .blog-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-                    gap: 24px;
-                }
-                
-                .blog-card {
-                    background: rgba(255,255,255,0.03);
-                    border: 1px solid rgba(255,255,255,0.08);
-                    border-radius: 16px;
-                    overflow: hidden;
-                    text-decoration: none;
-                    color: inherit;
-                    transition: all 0.2s;
-                }
-                
-                .blog-card:hover {
-                    transform: translateY(-4px);
-                    border-color: rgba(124,106,247,0.3);
-                    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-                }
-                
-                .blog-card-img {
-                    height: 160px;
-                    background: linear-gradient(135deg, rgba(124,106,247,0.2) 0%, rgba(79,142,247,0.2) 100%);
-                    position: relative;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                
-                .blog-card-img::before {
-                    content: '';
-                    position: absolute;
-                    inset: 0;
-                    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%237c6af7' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-                }
-                
-                .blog-card-category {
-                    position: absolute;
-                    top: 12px;
-                    left: 12px;
-                    padding: 4px 12px;
-                    background: rgba(0,0,0,0.6);
-                    backdrop-filter: blur(8px);
-                    border-radius: 20px;
-                    font-size: 11px;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                    color: #c4b5fd;
-                }
-                
-                .blog-card-body {
-                    padding: 20px;
-                }
-                
-                .blog-card-title {
-                    font-size: 18px;
-                    font-weight: 700;
-                    margin: 0 0 10px;
-                    line-height: 1.4;
-                    color: #f0f0f5;
-                }
-                
-                .blog-card-excerpt {
-                    font-size: 14px;
-                    color: #8a8a9a;
-                    line-height: 1.6;
-                    margin: 0 0 16px;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 3;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                }
-                
-                .blog-card-meta {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    font-size: 12px;
-                    color: #6b7280;
-                }
-                
-                .blog-card-author {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-                
-                .author-avatar {
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, #7c6af7, #4f8ef7);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 11px;
-                    font-weight: 600;
-                    color: #fff;
-                }
-                
-                .blog-card-info {
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                }
-                
-                .dot {
-                    opacity: 0.5;
-                }
-                
-                .blog-empty {
-                    text-align: center;
-                    padding: 80px 20px;
-                }
-                
-                .empty-icon {
-                    font-size: 64px;
-                    margin-bottom: 20px;
-                }
-                
-                .blog-empty h2 {
-                    font-size: 24px;
-                    font-weight: 700;
-                    margin: 0 0 8px;
-                }
-                
-                .blog-empty p {
-                    font-size: 16px;
-                    color: #8a8a9a;
-                    margin: 0 0 24px;
-                }
-                
-                .empty-cta {
-                    display: inline-flex;
-                    padding: 12px 24px;
-                    background: linear-gradient(135deg, #7c6af7 0%, #4f8ef7 100%);
-                    border-radius: 12px;
-                    color: #fff;
-                    text-decoration: none;
-                    font-weight: 600;
-                    transition: all 0.2s;
-                }
-                
-                .empty-cta:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 6px 28px rgba(124,106,247,0.4);
-                }
-                
-                .blog-loading {
-                    padding: 20px 0;
-                }
-                
-                .blog-skeleton-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-                    gap: 24px;
-                }
-                
-                .blog-skeleton {
-                    background: rgba(255,255,255,0.03);
-                    border: 1px solid rgba(255,255,255,0.08);
-                    border-radius: 16px;
-                    padding: 0;
-                    overflow: hidden;
-                }
-                
-                .skel-img {
-                    height: 160px;
-                    background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 100%);
-                    background-size: 200% 100%;
-                    animation: shimmer 1.5s infinite;
-                }
-                
-                .skel-line {
-                    height: 16px;
-                    margin: 16px 20px 0;
-                    background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 100%);
-                    background-size: 200% 100%;
-                    animation: shimmer 1.5s infinite;
-                    border-radius: 4px;
-                }
-                
-                .skel-title {
-                    height: 20px;
-                    width: 80%;
-                }
-                
-                .skel-short {
-                    width: 40%;
-                    margin-bottom: 20px;
-                }
-                
-                @keyframes shimmer {
-                    0% { background-position: 200% 0; }
-                    100% { background-position: -200% 0; }
-                }
-                
-                @media (max-width: 768px) {
-                    .blog-header-content {
-                        padding: 0 16px;
-                    }
-                    
-                    .blog-title-row {
-                        flex-direction: column;
-                        gap: 16px;
-                    }
-                    
-                    .write-btn {
-                        width: 100%;
-                        justify-content: center;
-                    }
-                    
-                    .blog-main {
-                        padding: 24px 16px;
-                    }
-                    
-                    .blog-grid {
-                        grid-template-columns: 1fr;
-                    }
-                }
-            `}</style>
+  return (
+    <div style={{ minHeight: '100vh', maxWidth: '100vw', overflowX: 'hidden', background: 'var(--bg-primary)' }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-md overflow-hidden"
+        style={{ background: 'rgba(255,255,255,0.7)', borderColor: 'var(--border)' }}>
+        <div className="max-w-[1000px] mx-auto px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5 no-underline">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold tracking-wider"
+              style={{ background: 'var(--accent)', color: 'var(--accent-fg)' }}>S</div>
+            <span className="text-sm font-medium tracking-tight" style={{ color: 'var(--text-primary)' }}>SENTINEL</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/blog" className="text-sm" style={{ color: 'var(--text-secondary)' }}>Blog</Link>
+            <Link href="/chat" className="btn-primary text-xs h-8 px-4 gap-1.5">
+              Open App <ArrowUpRight size={12} />
+            </Link>
+          </div>
         </div>
-    )
+      </nav>
+
+      <section className="pt-24 pb-6 px-6">
+        <motion.div className="max-w-[1000px] mx-auto" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div className="text-center mb-10">
+            <p className="text-xs tracking-widest uppercase mb-2"
+              style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>Stories & Insights</p>
+            <h1 className="text-[36px] md:text-[44px] font-medium tracking-tight mb-3 leading-tight"
+              style={{ color: 'var(--text-primary)' }}>
+              Blog
+            </h1>
+            <p className="text-sm max-w-md mx-auto" style={{ color: 'var(--text-tertiary)' }}>
+              Thoughts on security, engineering, and building an AI-native SOC platform.
+            </p>
+          </div>
+
+          <div className="max-w-lg mx-auto mb-8">
+            <div className="relative">
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-tertiary)' }} />
+              <input
+                type="text"
+                placeholder="Search articles..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full h-10 pl-9 pr-4 text-sm rounded-xl border outline-none transition-all"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-primary)',
+                }}
+                onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(124,106,247,0.08)' }}
+                onBlur={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none' }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-1.5 flex-wrap mb-12">
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={selectedCat === cat
+                  ? { background: 'var(--accent)', color: 'var(--accent-fg)' }
+                  : { color: 'var(--text-tertiary)', background: 'transparent' }
+                }
+                onClick={() => setSelectedCat(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      <section className="px-6 pb-24">
+        <div className="max-w-[1000px] mx-auto">
+          {loading ? (
+            <div className="grid md:grid-cols-3 gap-5">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="rounded-xl p-6" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+                  <div className="space-y-3">
+                    <div className="h-3 w-16 rounded" style={{ background: 'var(--bg-tertiary)' }} />
+                    <div className="h-5 w-full rounded" style={{ background: 'var(--bg-tertiary)' }} />
+                    <div className="h-5 w-3/4 rounded" style={{ background: 'var(--bg-tertiary)' }} />
+                    <div className="h-3 w-full rounded" style={{ background: 'var(--bg-tertiary)' }} />
+                    <div className="h-3 w-1/2 rounded" style={{ background: 'var(--bg-tertiary)' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <motion.div className="p-12 text-center rounded-xl" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }} variants={item}>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>{error}</p>
+              <button onClick={loadBlogs} className="btn-primary text-xs">Try Again</button>
+            </motion.div>
+          ) : filtered.length === 0 ? (
+            <motion.div className="p-12 text-center" variants={item}>
+              <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>No articles found</p>
+              <p className="text-xs mb-6" style={{ color: 'var(--text-tertiary)' }}>
+                {searchQuery ? 'Try a different search term' : 'Check back soon for new articles.'}
+              </p>
+              {user && (
+                <Link href="/blog/new" className="btn-primary text-xs">Write an Article</Link>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div variants={container} initial="initial" animate="animate">
+              {featured && (
+                <motion.div variants={item} className="mb-8">
+                  <Link href={`/blog/${featured.slug}`} className="block no-underline group">
+                    <div className="rounded-xl border transition-all duration-300 p-7 flex flex-col md:flex-row md:items-center gap-6"
+                      style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>
+                      <div className="flex-1 min-w-0">
+                        <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider mb-3"
+                          style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+                          {featured.category}
+                        </span>
+                        <h2 className="text-xl font-medium mb-2 leading-snug group-hover:opacity-80 transition-opacity"
+                          style={{ color: 'var(--text-primary)' }}>
+                          {featured.title}
+                        </h2>
+                        <p className="text-sm leading-relaxed mb-4 line-clamp-2" style={{ color: 'var(--text-tertiary)' }}>
+                          {featured.excerpt}
+                        </p>
+                        <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                          <span className="flex items-center gap-1.5">
+                            <User size={12} />
+                            {featured.author?.name || 'Anonymous'}
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Clock size={12} />
+                            {formatDate(featured.created_at)}
+                          </span>
+                          <span>{featured.read_time}</span>
+                        </div>
+                      </div>
+                      <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-xl shrink-0 transition-all duration-300 group-hover:bg-accent/10"
+                        style={{ background: 'var(--bg-tertiary)' }}>
+                        <ArrowUpRight size={18} style={{ color: 'var(--text-tertiary)' }} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              )}
+
+              <div className="grid md:grid-cols-3 gap-5">
+                {rest.map((blog, i) => (
+                  <motion.div key={blog.id} variants={item}>
+                    <Link href={`/blog/${blog.slug}`} className="block no-underline h-full group">
+                      <div className="h-full rounded-xl border transition-all duration-300 p-6 flex flex-col"
+                        style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>
+                        <span className="inline-block self-start px-2 py-0.5 rounded text-[9px] font-medium uppercase tracking-wider mb-3"
+                          style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+                          {blog.category}
+                        </span>
+                        <h3 className="text-base font-medium mb-2 leading-snug group-hover:opacity-80 transition-opacity line-clamp-2"
+                          style={{ color: 'var(--text-primary)' }}>
+                          {blog.title}
+                        </h3>
+                        <p className="text-sm leading-relaxed mb-5 flex-1 line-clamp-2" style={{ color: 'var(--text-tertiary)' }}>
+                          {blog.excerpt}
+                        </p>
+                        <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+                          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                            <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-medium"
+                              style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+                              {blog.author?.name?.charAt(0) || 'A'}
+                            </div>
+                            <span>{blog.author?.name || 'Anonymous'}</span>
+                          </div>
+                          <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+                            {formatDate(blog.created_at)}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </section>
+
+      <footer className="px-6 pb-10 text-center">
+        <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+          SENTINEL — AI Learning Platform + SOC Suite
+        </p>
+      </footer>
+    </div>
+  )
 }
